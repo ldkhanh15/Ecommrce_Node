@@ -1,17 +1,21 @@
-import User from '../models/User'
-const getUser = (id) => {
-    return new Promise(async(resolve,reject)=>{
+import db from '../models/index'
+
+const getUserPayment = () => {
+    return new Promise(async (resolve, reject) => {
         try {
-            let data=await User.find();
-            resolve({
-                data
+            let data=await db.User.findAll({
+                include:[
+                    {
+                        model:db.Payment,as:'payment',attributes:['name']
+                    }
+                ]
             })
+            resolve({data})
         } catch (error) {
             reject(error)
         }
     })
 }
-
 module.exports = {
-    getUser
+    getUserPayment
 }

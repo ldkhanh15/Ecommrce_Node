@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config();
 const route = require('./src/routes');
-const db=require('./src/config/db')
+import connectDB from './src/config/db';
 const app = express();
 
 app.use(cors({
@@ -15,8 +15,8 @@ app.use(express.urlencoded({
     extended: true
 }))
 
-
-db.connect();
+connectDB();
+// db.connect();
 
 const PORT = process.env.PORT || 8081;
 

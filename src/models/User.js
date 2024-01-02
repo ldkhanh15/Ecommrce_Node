@@ -1,14 +1,54 @@
-const mongoose = require('mongoose')
+'use strict';
+const {
+  Model
+} = require('sequelize');
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      // define association here
+      User.hasOne(models.Shop,{foreignKey:'idUser',as:'shop'})
+      
+      User.hasMany(models.Address,{foreignKey:'idUser',as:'address'})
+      User.hasMany(models.UserPayment,{foreignKey:'idUser',as:'paymentInfo'})
 
-const {Schema} = mongoose
-
-const userSchema=new Schema({
-    name:{
-        type:String,
-    },
-    age:{
-        type:Number
+      User.belongsToMany(models.Product, {
+        through: 'UserProduct',
+        foreignKey: 'idUser',
+        otherKey: 'idProduct',
+        as: 'product', // Tên của association
+      })
+      User.belongsToMany(models.Payment, {
+        through: 'UserPayment',
+        foreignKey: 'idUser',
+        otherKey: 'idPayment',
+        as: 'payment', // Tên của association
+      })
+      User.belongsToMany(models.Voucher, {
+        through: 'UserVoucher',
+        foreignKey: 'idUser',
+        otherKey: 'idVoucher',
+        as: 'voucher', // Tên của association
+      })
     }
-},{timestamps:true})
-
-module.exports = mongoose.model.User || mongoose.model('User',userSchema)
+  }
+  User.init({
+    name: DataTypes.STRING,
+    username: DataTypes.STRING,
+    password: DataTypes.STRING,
+    email: DataTypes.STRING,
+    role: DataTypes.STRING,
+    birthday: DataTypes.STRING,
+    gender: DataTypes.STRING,
+    phone: DataTypes.STRING,
+    avatar: DataTypes.STRING,
+  }, {
+    sequelize,
+    modelName: 'User',
+  });
+  return User;
+};

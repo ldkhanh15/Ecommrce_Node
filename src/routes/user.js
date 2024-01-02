@@ -1,5 +1,8 @@
 const router = require('express').Router()
-const userController = require('../controller/user')
-router.get('/', userController.getUser)
+import userController from '../controller/user'
+
+router.get('/', userController.getUserPayment)
+
+
 
 module.exports = router
