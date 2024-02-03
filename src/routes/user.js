@@ -1,7 +1,8 @@
 const router = require('express').Router()
 import userController from '../controller/userController'
+import authController from '../controller/authController'
 
-router.get('/', userController.getUser)
+router.get('/', authController.refreshToken, authController.verifyToken, authController.isBuyer, userController.getUser)
 router.post('/create', userController.createUser)
 
 

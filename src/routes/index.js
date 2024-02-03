@@ -8,6 +8,7 @@ import cart from './cart'
 import category from './category'
 import deliver from './deliver'
 import banner from './banner'
+import auth from './auth'
 function route(app) {
     app.use('/api/product', product)
     app.use('/api/user', user)
@@ -19,6 +20,7 @@ function route(app) {
     app.use('/api/category',category)
     app.use('/api/deliver',deliver)
     app.use('/api/banner',banner)
+    app.use('/api',auth)
 }
 
 module.exports = route

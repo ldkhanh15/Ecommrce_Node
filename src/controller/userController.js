@@ -2,6 +2,7 @@ import userService from '../services/userService'
 
 const getUser = async (req, res) => {
     try {
+        console.log('user',req.user);
         const data = await userService.getUser();
         return res.status(200).json(data)
     } catch (error) {

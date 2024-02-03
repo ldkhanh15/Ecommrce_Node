@@ -10,7 +10,11 @@ const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(10
 const getUser = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.User.findAll();
+            let data = await db.User.findAll({
+                attributes:{
+                    attributes: ['password']
+                }
+            });
             resolve({
                 data,
                 code: 1,
