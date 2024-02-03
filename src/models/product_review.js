@@ -19,9 +19,9 @@ module.exports = (sequelize, DataTypes) => {
     idUser: DataTypes.STRING,
     idBill: DataTypes.STRING,
     comment: DataTypes.STRING,
-    star: DataTypes.STRING,
-    image: DataTypes.STRING,
-    video: DataTypes.STRING,
+    star: DataTypes.INTEGER,
+    avatar: DataTypes.STRING,
+    idParent: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'ProductReview',

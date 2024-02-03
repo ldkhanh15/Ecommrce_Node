@@ -19,12 +19,6 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'idShop',
         as: 'shop'
       })
-      Deliver.belongsToMany(models.Voucher, {
-        through: 'VoucherDeliver',
-        foreignKey: 'idDeliver',
-        otherKey: 'idVoucher',
-        as: 'voucher'
-      })
     }
   }
   Deliver.init({

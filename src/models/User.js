@@ -11,10 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      User.hasOne(models.Shop,{foreignKey:'idUser',as:'shop'})
+      User.hasOne(models.Shop, { foreignKey: 'idUser', as: 'shop' })
       
-      User.hasMany(models.Address,{foreignKey:'idUser',as:'address'})
-      User.hasMany(models.UserPayment,{foreignKey:'idUser',as:'paymentInfo'})
+      
+      User.hasMany(models.Address, { foreignKey: 'idUser', as: 'address' })
+      User.hasMany(models.Blog, { foreignKey: 'idAuthor', as: 'blog' })
 
       User.belongsToMany(models.Product, {
         through: 'UserProduct',
@@ -46,6 +47,7 @@ module.exports = (sequelize, DataTypes) => {
     gender: DataTypes.STRING,
     phone: DataTypes.STRING,
     avatar: DataTypes.STRING,
+    fileName: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'User',

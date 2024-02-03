@@ -9,11 +9,14 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      idProduct: {
+        type: Sequelize.STRING
+      },
 
       link: {
         type: Sequelize.STRING
       },
-      idProduct: {
+      fileName: {
         type: Sequelize.STRING
       },
 

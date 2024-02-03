@@ -11,12 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Banner.hasMany(models.BannerImage,{foreignKey:'idBanner',as:'image'})
     }
   }
   Banner.init({
-    dateStart:DataTypes.STRING,
-    dateEnd:DataTypes.STRING,
+    start:DataTypes.DATE,
+    end:DataTypes.DATE,
+    description:DataTypes.STRING,
+    image:DataTypes.STRING,
+    fileName:DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Banner',

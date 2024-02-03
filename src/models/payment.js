@@ -11,26 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Payment.hasMany(models.Bill,{foreignKey:'idPayment',as:'bill'})
-      Payment.belongsToMany(models.User, {
-        through: 'UserPayment',
-        foreignKey: 'idPayment',
-        otherKey: 'idUser',
-        as: 'user', // Tên của association
-      });
-      Payment.belongsToMany(models.Voucher, {
-        through: 'VoucherPayment',
-        foreignKey: 'idPayment',
-        otherKey: 'idVoucher',
-        as: 'voucher', // Tên của association
-      });
+      Payment.hasMany(models.Bill, { foreignKey: 'idPayment', as: 'bill' })
     }
   }
- Payment.init({
+  Payment.init({
     name: DataTypes.STRING,
   }, {
     sequelize,
-    modelName:  'Payment',
+    modelName: 'Payment',
   });
   return Payment;
 };

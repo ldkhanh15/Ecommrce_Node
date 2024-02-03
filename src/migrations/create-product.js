@@ -13,26 +13,43 @@ module.exports = {
                 type: Sequelize.STRING
             },
             price: {
-                type: Sequelize.STRING,
+                type: Sequelize.INTEGER,
                 defaultValue: 0
             },
             mainImage: {
                 type: Sequelize.STRING
             },
+            hoverImage:{
+                type: Sequelize.STRING
+            },
             avgStar: {
-                type: Sequelize.STRING,
+                type: Sequelize.FLOAT,
             },
             sale: {
-                type: Sequelize.STRING
+                type: Sequelize.INTEGER
             },
             idShop: {
                 type: Sequelize.STRING,
             },
             sold: {
-                type: Sequelize.STRING,
+                type: Sequelize.INTEGER,
                 defaultValue: 0
             },
-
+            idCate:{
+                type: Sequelize.STRING
+            },
+            description:{
+                type: Sequelize.STRING
+            },
+            introduce:{
+                type: Sequelize.STRING
+            },
+            idMain:{
+                type: Sequelize.STRING
+            },
+            idHover:{
+                type: Sequelize.STRING
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

@@ -13,18 +13,15 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Product.hasOne(models.ProductDetail, { foreignKey: 'idProduct', as: 'detailProduct' }),
 
-        Product.hasMany(models.Combo, { foreignKey: 'idProduct', as: 'combo' }),
-        Product.hasMany(models.ProductImage, { foreignKey: 'idProduct', as: 'image' }),
-        Product.hasMany(models.ProductReview, { foreignKey: 'idProduct', as: 'review' }),
-        Product.hasMany(models.BillProduct, { foreignKey: 'idProduct', as: 'quantityProduct' });
+      Product.hasMany(models.Combo, { foreignKey: 'idProduct', as: 'combo' }),
+      Product.hasMany(models.ProductImage, { foreignKey: 'idProduct', as: 'image' }),
+      Product.hasMany(models.ProductReview, { foreignKey: 'idProduct', as: 'review' }),
+      Product.hasMany(models.Color, { foreignKey: 'idProduct', as: 'color' }),
+      Product.hasMany(models.ProductSale, { foreignKey: 'idProduct', as: 'productSale' }),
       
+      Product.belongsTo(models.Category, { foreignKey: 'idCate', as: 'category' }),
       Product.belongsTo(models.Shop, { foreignKey: 'idShop', as: 'shop' }),
-        Product.belongsToMany(models.Color, {
-          through: 'ProductColor',
-          foreignKey: 'idProduct',
-          otherKey: 'idColor',
-          as: 'color', // Tên của association
-        });
+      
       Product.belongsToMany(models.Size, {
         through: 'ProductSize',
         foreignKey: 'idProduct',
@@ -53,12 +50,18 @@ module.exports = (sequelize, DataTypes) => {
   }
   Product.init({
     name: DataTypes.STRING,
-    price: DataTypes.STRING,
+    price: DataTypes.INTEGER,
     mainImage: DataTypes.STRING,
-    avgStar: DataTypes.STRING,
-    sale: DataTypes.STRING,
+    hoverImage: DataTypes.STRING,
+    avgStar: DataTypes.FLOAT,
+    sale: DataTypes.INTEGER,
     idShop: DataTypes.STRING,
-    sold: DataTypes.STRING,
+    sold: DataTypes.INTEGER,
+    idCate: DataTypes.STRING,
+    description: DataTypes.STRING,
+    introduce: DataTypes.STRING,
+    idMain: DataTypes.STRING,
+    idHover: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Product',

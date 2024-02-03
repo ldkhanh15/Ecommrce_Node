@@ -11,15 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Color.belongsToMany(models.Product, {
-        through: 'ProductColor',
-        foreignKey: 'idColor',
-        otherKey: 'idProduct',
-        as: 'product', // Tên của association
-      });
+      Color.belongsTo(models.Product,{foreignKey:'idProduct',as:'product'});
     }
   }
  Color.init({
+    idProduct: DataTypes.STRING,
     name: DataTypes.STRING,
   }, {
     sequelize,

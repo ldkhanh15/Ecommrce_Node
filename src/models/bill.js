@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     idAddress: DataTypes.STRING,
     idDeliver: DataTypes.STRING,
     idPayment: DataTypes.STRING,
-    totalPrice: DataTypes.STRING,
+    totalPrice: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Bill',

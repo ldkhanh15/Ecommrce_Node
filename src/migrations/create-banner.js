@@ -10,10 +10,19 @@ module.exports = {
         type: Sequelize.INTEGER
       },
 
-      dateStart: {
+      start: {
+        type: Sequelize.DATE
+      },
+      end: {
+        type: Sequelize.DATE
+      },
+      description:{
         type: Sequelize.STRING
       },
-      dateEnd: {
+      image:{
+        type: Sequelize.STRING
+      },
+      fileName:{
         type: Sequelize.STRING
       },
       createdAt: {

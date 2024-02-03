@@ -10,7 +10,7 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             totalPrice: {
-                type: Sequelize.STRING
+                type: Sequelize.INTEGER
             },
             idShop: {
                 type: Sequelize.STRING,

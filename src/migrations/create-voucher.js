@@ -12,18 +12,19 @@ module.exports = {
       maVoucher: {
         type: Sequelize.STRING
       },
-      idPayment: {
-        type: Sequelize.STRING
+      start: {
+        type: Sequelize.DATE
       },
-      startDate: {
-        type: Sequelize.STRING
-      },
-      endDate: {
-        type: Sequelize.STRING
+      end: {
+        type: Sequelize.DATE
       },
       quantity: {
         type: Sequelize.INTEGER,
         defaultValue: 0
+      },
+      remain:{
+        type: Sequelize.INTEGER,
+        defaultValue:0
       },
       limit: {
         type: Sequelize.STRING
@@ -39,10 +40,13 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue: 0
       },
+      minBill:{
+        type: Sequelize.INTEGER,
+        defaultValue:0
+      },
       type: {
         type: Sequelize.STRING
       },
-
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

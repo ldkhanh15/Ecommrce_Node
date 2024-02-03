@@ -39,14 +39,15 @@ module.exports = (sequelize, DataTypes) => {
   }
   Voucher.init({
     maVoucher: DataTypes.STRING,
-    idPayment: DataTypes.STRING,
-    startDate: DataTypes.STRING,
-    endDate: DataTypes.STRING,
+    start: DataTypes.DATE,
+    end: DataTypes.DATE,
     quantity: DataTypes.INTEGER,
+    remain: DataTypes.INTEGER,
     limit: DataTypes.STRING,
     description: DataTypes.STRING,
     salePT: DataTypes.INTEGER,
     salePrice: DataTypes.INTEGER,
+    minBill: DataTypes.INTEGER,
     type: DataTypes.STRING,
   }, {
     sequelize,

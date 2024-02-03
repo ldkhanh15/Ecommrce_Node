@@ -18,11 +18,17 @@ module.exports = {
             password: {
                 type: Sequelize.STRING
             },
-            returnAddress: {
-                type: Sequelize.STRING,
-            },
-            pickupAddress: {
+            avatar: {
                 type: Sequelize.STRING
+            },
+            fileName: {
+                type: Sequelize.STRING
+            },
+            address: {
+                type: Sequelize.STRING
+            },
+            username: {
+                type: Sequelize.STRING,
             },
             name: {
                 type: Sequelize.STRING,
@@ -32,6 +38,9 @@ module.exports = {
             },
             bank: {
                 type: Sequelize.STRING,
+            },
+            introduce:{
+                type: Sequelize.STRING
             },
             createdAt: {
                 allowNull: false,
