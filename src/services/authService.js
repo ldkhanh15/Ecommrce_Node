@@ -33,7 +33,7 @@ const login = (req, res) => {
 
             res.cookie(String(existingUser.id, existingUser.role), token, {
                 path: '/',
-                expires: new Date(Date.now() + 1000 * 30 * 60 * 24),
+                expires: new Date(Date.now() + 60 * 60 * 24),
                 httpOnly: true,
                 sameSite: "lax"
             })

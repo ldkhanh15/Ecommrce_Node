@@ -26,9 +26,8 @@ const logout = async (req, res) => {
     }
 }
 const verifyToken = (req, res, next) => {
-    const cookie = req.headers.cookie;
-    const tokens = cookie.split('=');
-    const token = tokens[tokens.length - 1]
+    const cookie = req.headers?.authorization;
+    const token = cookie?.split(' ')[1];
     if (!token) {
         return notAuth('Token not found', res)
     }
@@ -37,6 +36,7 @@ const verifyToken = (req, res, next) => {
             return notAuth('Token not valid or expired', res)
         }
         req.user = user;
+        console.log('user', req.user);
         next();
     })
 }

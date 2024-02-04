@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
       Product.hasMany(models.Color, { foreignKey: 'idProduct', as: 'color' }),
       Product.hasMany(models.ProductSale, { foreignKey: 'idProduct', as: 'productSale' }),
       
-      Product.belongsTo(models.Category, { foreignKey: 'idCate', as: 'category' }),
+      Product.belongsTo(models.Cate, { foreignKey: 'idCate', as: 'category' }),
       Product.belongsTo(models.Shop, { foreignKey: 'idShop', as: 'shop' }),
       
       Product.belongsToMany(models.Size, {
