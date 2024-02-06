@@ -97,7 +97,7 @@ const getSize = () => {
             let data = await db.Size.findAll();
             resolve({
                 message: 'Successfully',
-                errCode: 1,
+                code: 1,
                 data: data
             })
         } catch (error) {
@@ -114,12 +114,12 @@ const createSize = (data) => {
                 await size.save();
                 resolve({
                     message: 'Successfully',
-                    errCode: 1,
+                    code: 1,
                 })
             }
             resolve({
-                errMessage: 'Missing name size!',
-                errCode: 2
+                message: 'Missing name size!',
+                code: 0
             })
         } catch (error) {
             reject(error)

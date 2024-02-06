@@ -13,7 +13,8 @@ const getUser = (req) => {
             if (req.user.role !== 'R1') {
                 if (id !== String(req.user.id)) {
                     resolve({
-                        message: 'You are not allowed to get information another user'
+                        message: 'You are not allowed to get information another user',
+                        code:0
                     })
                 }
             }
@@ -92,7 +93,8 @@ const updateUser = (req) => {
                 if (req.user.role !== 'R1') {
                     if (id !== String(req.user.id)) {
                         resolve({
-                            message: 'You are not allowed to update information another user'
+                            message: 'You are not allowed to update information another user',
+                            code:0
                         })
                     }
                 }

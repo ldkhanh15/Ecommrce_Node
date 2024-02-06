@@ -11,7 +11,8 @@ const getPayment = (data) => {
             })
             resolve({
                 data,
-                message: 'Successfully'
+                message: 'Successfully',
+                code:1
             })
         } catch (error) {
             reject(error)

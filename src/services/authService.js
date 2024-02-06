@@ -14,13 +14,15 @@ const login = (req, res) => {
             })
             if (!existingUser) {
                 resolve({
-                    message: "User not found"
+                    message: "User not found",
+                    code: 0
                 })
             }
             let isPasswordCorrect = bcrypt.compareSync(password, existingUser.password);
             if (!isPasswordCorrect) {
                 resolve({
-                    message: "Password is incorrect"
+                    message: "Password is incorrect",
+                    code: 0
                 })
             }
             const token = jwt.sign({ id: existingUser.id, role: existingUser.role }, process.env.JWT_SECRET, {
@@ -40,7 +42,8 @@ const login = (req, res) => {
             resolve({
                 message: "Login successfully",
                 user: existingUser,
-                token
+                token,
+                code: 1
             })
         } catch (error) {
             reject(error)
@@ -48,7 +51,7 @@ const login = (req, res) => {
     })
 }
 
-const logout = (req,res) => {
+const logout = (req, res) => {
     return new Promise(async (resolve, reject) => {
         try {
             const cookie = req.headers.cookie;
@@ -56,23 +59,28 @@ const logout = (req,res) => {
 
             if (!prevToken) {
                 resolve({
-                    message: 'Could not find token'
+                    message: 'Could not find token',
+                    code: 0
                 })
             }
             jwt.verify(String(prevToken), process.env.JWT_SECRET, (err, user) => {
                 if (err) {
                     console.log(err);
-                    resolve({ message: 'Invalid token refresh' })
+                    resolve({
+                        message: 'Invalid token refresh',
+                        code: 0
+                    })
                 }
 
                 req.cookies[`${user.id}`] = "";
                 res.clearCookie(`${user.id}`)
 
-                resolve({ message: 'Logout successfully' })
+                resolve({
+                    message: 'Logout successfully',
+                    code: 1
+                })
             })
-            resolve({
-                message: 'Successfully'
-            })
+
         } catch (error) {
             reject(error)
         }

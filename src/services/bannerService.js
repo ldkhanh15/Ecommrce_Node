@@ -8,7 +8,8 @@ const getBanner = () => {
             let data = await db.Banner.findAll();
             resolve({
                 data,
-                message: 'Successfully'
+                message: 'Successfully',
+                code:1
             })
         } catch (error) {
             reject(error)
@@ -104,7 +105,8 @@ const updateBanner = (req) => {
                 if (!banner) {
                     await cloudinary.uploader.destroy(req.file?.filename)
                     resolve({
-                        message: 'ID Banner not found'
+                        message: 'ID Banner not found',
+                        code:0
                     })
                 }
                 if (banner.fileName) {

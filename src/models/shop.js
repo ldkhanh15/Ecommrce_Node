@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Shop.init({
-    idUser: DataTypes.STRING,
+    idUser:DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
     name: DataTypes.STRING,

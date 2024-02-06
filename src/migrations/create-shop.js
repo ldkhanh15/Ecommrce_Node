@@ -9,13 +9,13 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            idUser: {
-                type: Sequelize.STRING
-            },
             email: {
                 type: Sequelize.STRING,
             },
             password: {
+                type: Sequelize.STRING
+            },
+            idUser: {
                 type: Sequelize.STRING
             },
             avatar: {

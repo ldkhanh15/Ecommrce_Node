@@ -16,6 +16,9 @@ module.exports = {
       idBill: {
         type: Sequelize.STRING
       },
+      type: {
+        type: Sequelize.STRING
+      },
       quantity: {
         type: Sequelize.INTEGER
       },

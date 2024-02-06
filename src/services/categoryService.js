@@ -12,7 +12,8 @@ const getCate = (req) => {
             })
             resolve({
                 message: 'Successfully',
-                data
+                data,
+                code:1
             })
         } catch (error) {
             reject(error)
@@ -26,7 +27,8 @@ const createCate = (req) => {
             let fileName = req?.file?.filename
             if (!fileName || !image) {
                 resolve({
-                    message: 'Image is required'
+                    message: 'Image is required',
+                    code:0
                 })
             }
             const error = joi.object({ name }).validate(req.body)
@@ -44,7 +46,7 @@ const createCate = (req) => {
                 await cate.save();
                 resolve({
                     message: 'Successfully',
-                    cate: cate
+                    code:1
                 })
             }
         } catch (error) {

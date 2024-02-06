@@ -5,8 +5,8 @@ const getDeliver = () => {
             let data = await db.Deliver.findAll();
             resolve({
                 message: 'Successfully',
-                errCode: 1,
-                data: data
+                code: 1,
+                data
             })
         } catch (error) {
             reject(error)
@@ -16,18 +16,18 @@ const getDeliver = () => {
 const createDeliver = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { name,price } = data;
+            const { name, price } = data;
             if (name && price) {
                 const deliver = await db.Deliver.create(data)
                 await deliver.save();
                 resolve({
                     message: 'Successfully',
-                    errCode: 1,
+                    code: 1,
                 })
             }
             resolve({
-                errMessage: 'Missing name deliver or price!',
-                errCode: 2
+                message: 'Missing name deliver or price!',
+                code: 0
             })
         } catch (error) {
             reject(error)
@@ -44,12 +44,12 @@ const deleteDeliver = (data) => {
                 })
                 resolve({
                     message: 'Successfully',
-                    errCode: 1,
+                    code: 1,
                 })
             }
             resolve({
-                errMessage: 'Missing id Deliver!',
-                errCode: 2
+                message: 'Missing id Deliver!',
+                code: 0
             })
         } catch (error) {
             reject(error)
@@ -59,26 +59,26 @@ const deleteDeliver = (data) => {
 const updateDeliver = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { id, name ,price} = data;
+            const { id, name, price } = data;
             if (id && name && price) {
                 await db.Deliver.update({ name: name }, {
                     where: { id }
                 })
                 resolve({
                     message: 'Successfully',
-                    errCode: 1,
+                    code: 1,
                 })
             }
             resolve({
-                errMessage: 'Missing id Deliver or name Deliver or price!',
-                errCode: 2
+                message: 'Missing id Deliver or name Deliver or price!',
+                code: 0
             })
         } catch (error) {
             reject(error)
         }
     })
 }
-module.exports ={
+module.exports = {
     createDeliver,
     getDeliver,
     deleteDeliver,

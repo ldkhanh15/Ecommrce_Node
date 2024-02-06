@@ -1,40 +1,119 @@
 import db from '../models/index'
+import joi from 'joi'
+import { id, remain, quantity, limit, description, minBill, voucherCode, start, end, type, salePT, salePrice } from '../helpers/joi_schema'
 
-const getVoucherProduct = () => {
+
+const getVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const data = await db.Voucher.findAll({
-                include: [
-                    {
-                        model: db.Shop, as: 'shop', attributes: ['name'],
-                        include: [
-                            {
-                                model: db.Product, as: 'product'
-                            }
-                        ]
-                    }
-                ]
+            const data = await db.Voucher.findAll({})
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
             })
-            resolve({ data })
         } catch (error) {
             reject(error)
         }
     })
 }
-const useVoucher = () => {
+const createVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let voucher = await db.Voucher.findOne({
-                where: {
-                    maVoucher: 'mungxuan2024'
-                }
-            })
-            if (voucher.quantity === 0) {
-                resolve('Đã hết mã')
+            const error = joi.object({ voucherCode, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
+                .validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
             } else {
-                voucher.quantity = voucher.quantity - 1;
-                await voucher.save();
-                resolve('success')
+                let voucher = await db.Voucher.create({
+                    ...req.body,
+                    maVoucher: req.body.voucherCode,
+                    remain: 0
+                })
+                await voucher.save()
+                resolve({
+                    code: 1,
+                    message: 'Create new voucher successfully'
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const deleteVoucher = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
+                let voucher = await db.Voucher.findOne({
+                    where: {
+                        id: req.body.id,
+                    }
+                })
+
+                if (!voucher) {
+                    resolve({
+                        code: 0,
+                        message: 'Voucher ID not found'
+                    })
+                } else {
+                    await db.Voucher.destroy({
+                        where: { id: req.body.id }
+                    })
+                    resolve({
+                        code: 1,
+                        message: `Voucher has id ${req.body.id} with code \'${voucher.maVoucher}\' deleted`
+                    })
+                }
+            }
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const updateVoucher = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, voucherCode,remain, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
+                .validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
+                let voucher = await db.Voucher.findOne({
+                    where: { id: req.body.id }
+                })
+                if (!voucher) {
+                    resolve({
+                        code: 0,
+                        message: 'Voucher ID not found'
+                    })
+                } else {
+                    if (req.body.salePrice) {
+                        req.body.salePT = 0
+                    } else if (req.body.salePT) {
+                        req.body.salePrice = 0
+                    }
+                    await db.Voucher.update(req.body, {
+                        where: { id: req.body.id }
+                    })
+                    resolve({
+                        code: 1,
+                        message: `Voucher has id ${req.body.id} with code \'${voucher.maVoucher}\' updated`
+                    })
+                }
             }
 
         } catch (error) {
@@ -43,6 +122,8 @@ const useVoucher = () => {
     })
 }
 module.exports = {
-    getVoucherProduct,
-    useVoucher
+    getVoucher,
+    createVoucher,
+    deleteVoucher,
+    updateVoucher,
 }
