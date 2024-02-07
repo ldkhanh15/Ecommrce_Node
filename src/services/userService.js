@@ -14,7 +14,7 @@ const getUser = (req) => {
                 if (id !== String(req.user.id)) {
                     resolve({
                         message: 'You are not allowed to get information another user',
-                        code:0
+                        code: 0
                     })
                 }
             }
@@ -62,6 +62,12 @@ const createUser = (data) => {
                         phone: data.phone,
                     })
                     await createUser.save()
+                    if (data?.role === 'R2') {
+                        let vendor = await db.Shop.create({
+                            idUser: createUser.id, 
+                        })
+                        await vendor.save()
+                    }
                     resolve({
                         message: 'Successfully created',
                         code: 1
@@ -94,7 +100,7 @@ const updateUser = (req) => {
                     if (id !== String(req.user.id)) {
                         resolve({
                             message: 'You are not allowed to update information another user',
-                            code:0
+                            code: 0
                         })
                     }
                 }

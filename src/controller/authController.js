@@ -41,9 +41,8 @@ const verifyToken = (req, res, next) => {
     })
 }
 const refreshToken = (req, res, next) => {
-    const cookie = req.headers.cookie;
-    const prevTokens = cookie.split('=');
-    const prevToken = prevTokens[prevTokens.length - 1]
+    const cookie = req.headers?.authorization;
+    const prevToken = cookie?.split(' ')[1];
     if (!prevToken) {
         return notAuth('Token not found', res)
     }
@@ -67,7 +66,7 @@ const refreshToken = (req, res, next) => {
             sameSite: "lax"
         })
 
-        req.user = user.user
+        req.user = user
         next();
 
     })

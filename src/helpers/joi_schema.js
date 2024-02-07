@@ -38,10 +38,16 @@ export const totalPrice = joi.number().required();
 export const products = joi.array().required();
 
 //VOUCHER
-export  const voucherCode = joi.string().required();
-export const remain=joi.number();
-export const salePT=joi.number();
+export const voucherCode = joi.string().required();
+export const remain = joi.number();
+export const salePT = joi.number();
 export const salePrice = joi.number();
 export const minBill = joi.number().required();
 export const type = joi.string().required();
 export const limit = joi.string().required();
+
+//BLOG
+export const field = joi.string().required();
+export const idAuthor = joi.string().required();
+export const comment = joi.string().required();
+export const content = joi.string().required();

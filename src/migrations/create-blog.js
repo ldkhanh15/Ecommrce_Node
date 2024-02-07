@@ -16,16 +16,16 @@ module.exports = {
         type: Sequelize.STRING
       },
       view: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        defaultValue: 0
       },
       image: {
         type: Sequelize.STRING,
-        defaultValue: 0
       },
-      fileName:{
+      fileName: {
         type: Sequelize.STRING
       },
-      field:{
+      field: {
         type: Sequelize.STRING
       },
       createdAt: {
