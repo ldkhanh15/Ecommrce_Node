@@ -26,7 +26,7 @@ export const payment = joi.string().required();
 //CART
 export const quantity = joi.number().required();
 
-//PRODUCT
+//BILL
 export const idProduct = joi.string().required();
 export const idAddress = joi.string().required();
 export const idPayment = joi.string().required();
@@ -51,3 +51,17 @@ export const field = joi.string().required();
 export const idAuthor = joi.string().required();
 export const comment = joi.string().required();
 export const content = joi.string().required();
+
+//SIZE
+export const nameSize = joi.string().required();
+
+//PRODUCT
+export const nameProduct = joi.string().required();
+export const price = joi.number().required();
+export const sale = joi.number().required();
+export const idCate = joi.string().required();
+export const additional = joi.string();
+export const size = joi.array();
+export const color = joi.array();
+export const combo = joi.array();
+

@@ -1,181 +1,212 @@
 import db from '../models/index'
+import joi from 'joi'
+import { color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
+import cloudinary from 'cloudinary'
 
-const getProduct = ({ id }) => {
+const getProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (!id) {
-                id = ''
-            }
-            let data = await db.Product.findAll({
-                where: { id },
-                include: [
-                    {
-                        model: db.ProductDetail, as: 'detailProduct', attributes: ['description'],
-                        include: [
-                            {
-                                model: db.Trademark, as: 'brand', attributes: ['name']
-                                //id danh mục brand
-                            },
-                            {
-                                model: db.CateSub, as: 'cate', attributes: ['name'],
-                                //id danh mục con
-                                include: [
-                                    {
-                                        model: db.CateParent, as: 'parent', attributes: ['name']
-                                    }
-                                ]
-                            }
-                        ]
+            console.log(req.body.id);
+            let data = !req.body.id ?
+                await db.Product.findAll({
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['name']
+                        },
+                        {
+                            model: db.Cate, as: 'cate', attributes: ['name']
+                        },
+                        {
+                            model: db.ProductImage, as: 'image', attributes: ['link']
+                        },
+                        {
+                            model: db.ProductReview, as: 'review', attributes: ['star']
+                        }
+                    ],
+                })
+                :
+                await db.Product.findOne({
+                    where: {
+                        id: req.body.id
                     },
-                    {
-                        model: db.ProductImage, as: 'image', attributes: ['link']
-                        //link ảnh
-                    },
-                    {
-                        model: db.ProductReview, as: 'review', attributes: ['comment']
-                        //comment
-                    },
-                    {
-                        model: db.Shop, as: 'shop', attributes: ['name']
-                        //id shop
-                    }
-                ]
-            });
-            resolve({ data })
-
-
+                    include: [
+                        {
+                            model: db.Cate, as: 'cate', attributes: ['name']
+                        },
+                        {
+                            model: db.ProductImage, as: 'image', attributes: ['link']
+                        },
+                        {
+                            model: db.ProductReview, as: 'review', attributes: ['star']
+                        },
+                        {
+                            model: db.Color, as: 'color', attributes: ['name']
+                        },
+                        {
+                            model: db.Size, as: 'size', attributes: ['name']
+                        },
+                        {
+                            model: db.Combo, as: 'combo', attributes: ['name']
+                        },
+                    ],
+                })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
         } catch (error) {
             reject(error)
         }
     })
 }
-const createProduct = (data) => {
+const createProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { name, mainImage, price, idShop, idBrand, idCate, description, from, comment, image } = data
+            const error = joi.object({ color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
 
-            const product = await db.Product.create({
-                name, mainImage, price, idShop
-            })
-            await product.save();
-            const productDetail = await db.ProductDetail.create({
-                idProduct: product.id,
-                idBrand,
-                idCate,
-                description,
-                from
-            })
-            await productDetail.save();
-            const commentProduct = await db.ProductReview.create({
-                comment,
-                idProduct: product.id
-            })
-            await commentProduct.save()
-            image.map(async (item) => {
-                let imageProduct = await db.ProductImage.create({
-                    link: item,
+                let product = await db.Product.create({
+                    ...req.body,
+                    sold: 0,
+                    name: req.body.nameProduct,
+                    mainImage: req.files[0].path,
+                    hoverImage: req.files[1].path
+                })
+                await product.save();
+                Promise.all(req.files?.map(async (file, index) => {
+                    let image = await db.ProductImage.create({
+                        idProduct: product.id,
+                        link: file.path,
+                        fileName: file.filename
+                    })
+                    await image.save();
+                }))
+
+                let productDetail = await db.ProductDetail.create({
+                    ...req.body,
                     idProduct: product.id
                 })
-                await imageProduct.save();
-            })
-            resolve()
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
-
-
-
-
-
-//size
-const getSize = () => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            let data = await db.Size.findAll();
-            resolve({
-                message: 'Successfully',
-                code: 1,
-                data: data
-            })
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-const createSize = (data) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const { name } = data;
-            if (name) {
-                const size = await db.Size.create(data)
-                await size.save();
+                await productDetail.save()
+                req.body.size && Promise.all(req.body.size.map(async (item) => {
+                    let sizeItem = await db.ProductSize.create({
+                        idProduct: product.id,
+                        idSize: item
+                    })
+                    await sizeItem.save()
+                }))
+                req.body.combo && Promise.all(req.body.combo.map(async (item) => {
+                    let comboItem = await db.Combo.create({
+                        idProduct: product.id,
+                        name: item
+                    })
+                    await comboItem.save()
+                }))
+                req.body.color && Promise.all(req.body.color.map(async (item) => {
+                    let colorItem = await db.Color.create({
+                        idProduct: product.id,
+                        name: item
+                    })
+                    await colorItem.save()
+                }))
                 resolve({
                     message: 'Successfully',
-                    code: 1,
+                    code: 1
                 })
             }
-            resolve({
-                message: 'Missing name size!',
-                code: 0
-            })
+
         } catch (error) {
             reject(error)
         }
     })
 }
-const deleteSize = (data) => {
+
+
+const deleteProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { id } = data;
-            if (id) {
-                await db.Size.destroy({
-                    where: { id }
+            const error = joi.object({ id }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
                 })
+            } else {
+                let product = await db.Product.findOne({
+                    where: { id: req.body.id }
+                })
+                if (!product) {
+                    resolve({
+                        message: 'Product id not found',
+                        code: 0
+                    })
+                } else {
+                    let images = await db.ProductImage.findAll({
+                        where: { idProduct: req.body.id },
+                        raw: true
+                    })
+                    Promise.all(images.map(async (image) => {
+                        await cloudinary.uploader.destroy(image.fileName)
+                    }))
+                    await db.ProductImage.destroy({
+                        where: { idProduct: req.body.id },
+                    })
+                    await db.ProductDetail.destroy({
+                        where: { idProduct: req.body.id },
+                    })
+                    await db.Product.destroy({
+                        where: {
+                            id: req.body.id
+                        }
+                    })
+                    await db.ProductSale.destroy({
+                        where: {
+                            id: req.body.id
+                        }
+                    })
+                    await db.ProductReview.destroy({
+                        where: { id: req.body.id }
+                    })
+                    await db.Color.destroy({
+                        where: {
+                            idProduct: req.body.id
+                        }
+                    })
+                    await db.ProductSize.destroy({
+                        where: {
+                            idProduct: req.body.id
+                        }
+                    })
+                    await db.Combo.destroy({
+                        where: {
+                            idProduct: req.body.id
+                        }
+                    })
+
+
+                }
                 resolve({
                     message: 'Successfully',
-                    errCode: 1,
+                    code: 1
                 })
             }
-            resolve({
-                errMessage: 'Missing id size!',
-                errCode: 2
-            })
+
         } catch (error) {
             reject(error)
         }
     })
 }
-const updateSize = (data) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const { id, name } = data;
-            if (id && name) {
-                await db.Size.update({ name: name }, {
-                    where: { id }
-                })
-                resolve({
-                    message: 'Successfully',
-                    errCode: 1,
-                })
-            }
-            resolve({
-                errMessage: 'Missing id size or name size!',
-                errCode: 2
-            })
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
+
+
+
+
 module.exports = {
     getProduct,
     createProduct,
-    getSize,
-    createSize,
-    deleteSize,
-    updateSize
-
+    deleteProduct,
 }

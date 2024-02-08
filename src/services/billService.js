@@ -111,7 +111,6 @@ const deleteBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             const error = joi.object({ id }).validate({ id: req.body?.id });
-            console.log(req.body.products);
             if (error.error) {
                 resolve({
                     code: 0,

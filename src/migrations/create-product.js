@@ -19,14 +19,16 @@ module.exports = {
             mainImage: {
                 type: Sequelize.STRING
             },
-            hoverImage:{
+            hoverImage: {
                 type: Sequelize.STRING
             },
             avgStar: {
                 type: Sequelize.FLOAT,
+                defaultValue: 0.0
             },
             sale: {
-                type: Sequelize.INTEGER
+                type: Sequelize.INTEGER,
+                defaultValue: 0
             },
             idShop: {
                 type: Sequelize.STRING,
@@ -35,19 +37,13 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 defaultValue: 0
             },
-            idCate:{
+            idCate: {
                 type: Sequelize.STRING
             },
-            description:{
+            description: {
                 type: Sequelize.STRING
             },
-            introduce:{
-                type: Sequelize.STRING
-            },
-            idMain:{
-                type: Sequelize.STRING
-            },
-            idHover:{
+            introduce: {
                 type: Sequelize.STRING
             },
             createdAt: {

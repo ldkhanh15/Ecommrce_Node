@@ -9,7 +9,7 @@ router.get('/', categoryController.getCate);
 router.use(authController.verifyToken);
 router.use(authController.isAdmin);
 router.post('/create', cloudinary.uploadImage.single('image'), categoryController.createCate);
-router.post('/delete', categoryController.deleteCate);
-router.post('/update', cloudinary.uploadImage.single('image'), categoryController.updateCate);
+router.delete('/delete', categoryController.deleteCate);
+router.put('/update', cloudinary.uploadImage.single('image'), categoryController.updateCate);
 
 module.exports = router

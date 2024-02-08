@@ -39,7 +39,7 @@ const getUser = (req) => {
 const createUser = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ email, password, role, birthday, gender, name, username, phone }).validate(data)
+            const error = joi.object({ email, password, role, birthday, gender, name, username, phone ,role}).validate(data)
 
             if (error.error) {
                 resolve({
@@ -64,7 +64,7 @@ const createUser = (data) => {
                     await createUser.save()
                     if (data?.role === 'R2') {
                         let vendor = await db.Shop.create({
-                            idUser: createUser.id, 
+                            idUser: createUser.id,
                         })
                         await vendor.save()
                     }

@@ -4,6 +4,7 @@ import authController from '../controller/authController'
 
 router.use(authController.verifyToken)
 router.use(authController.isBuyer)
+
 router.get('/', billController.getBill)
 router.post('/create', billController.createBill)
 router.delete('/delete', billController.deleteBill)

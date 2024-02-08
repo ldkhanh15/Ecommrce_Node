@@ -9,6 +9,7 @@ import category from './category'
 import deliver from './deliver'
 import banner from './banner'
 import auth from './auth'
+import size from './size'
 import payment from './payment'
 function route(app) {
     app.use('/api/product', product)
@@ -22,6 +23,7 @@ function route(app) {
     app.use('/api/deliver', deliver)
     app.use('/api/banner', banner)
     app.use('/api/payment', payment)
+    app.use('/api/size', size)
     app.use('/api', auth)
 }
 
