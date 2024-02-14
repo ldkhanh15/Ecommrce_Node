@@ -13,7 +13,7 @@ module.exports = {
                 type: Sequelize.STRING
             },
             price: {
-                type: Sequelize.INTEGER,
+                type: Sequelize.FLOAT,
                 defaultValue: 0
             },
             mainImage: {
@@ -27,7 +27,7 @@ module.exports = {
                 defaultValue: 0.0
             },
             sale: {
-                type: Sequelize.INTEGER,
+                type: Sequelize.FLOAT,
                 defaultValue: 0
             },
             idShop: {
