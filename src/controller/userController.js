@@ -11,7 +11,7 @@ const getUser = async (req, res) => {
 
 const createUser = async (req, res) => {
     try {
-        const data = await userService.createUser(req.body);
+        const data = await userService.createUser(req);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);
@@ -29,7 +29,7 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
     try {
-        const data = await userService.deleteUser(req.body);
+        const data = await userService.deleteUser(req);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);

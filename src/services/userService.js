@@ -36,10 +36,10 @@ const getUser = (req) => {
         }
     })
 }
-const createUser = (data) => {
+const createUser = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ email, password, role, birthday, gender, name, username, phone ,role}).validate(data)
+            const error = joi.object({ email, password, role, birthday, gender, name, username, phone }).validate(req.body)
 
             if (error.error) {
                 resolve({
@@ -48,23 +48,20 @@ const createUser = (data) => {
                 })
             } else {
                 let user = await db.User.findOne({
-                    where: { email: data?.email }
+                    where: { email: req.body.email }
                 })
                 if (!user) {
                     let createUser = await db.User.create({
-                        email: data?.email,
-                        password: hashPassword(data?.password),
-                        role: data?.role,
-                        birthday: data.birthday,
-                        gender: data.gender,
-                        name: data.name,
-                        username: data.username,
-                        phone: data.phone,
+                        ...req.body,
+                        password: hashPassword(req.body.password),
                     })
                     await createUser.save()
-                    if (data?.role === 'R2') {
+                    if (req.body.role === 'R2') {
                         let vendor = await db.Shop.create({
                             idUser: createUser.id,
+                            ...req.body,
+                            avgStar:0,
+                            comment:0
                         })
                         await vendor.save()
                     }
@@ -133,10 +130,10 @@ const updateUser = (req) => {
         }
     })
 }
-const deleteUser = (data) => {
+const deleteUser = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate(data);
+            const error = joi.object({ id }).validate(req.body);
             if (error.error) {
                 resolve({
                     message: error.error?.details[0]?.message,
@@ -144,11 +141,11 @@ const deleteUser = (data) => {
                 })
             }
             let user = await db.User.findOne({
-                where: { id: data.id }
+                where: { id: req.body.id }
             })
             if (user) {
                 await db.User.destroy({
-                    where: { id: data.id },
+                    where: { id: req.body.id },
                 })
                 resolve({
                     message: 'User deleted successfully',

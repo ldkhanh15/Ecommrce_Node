@@ -54,8 +54,8 @@ const login = (req, res) => {
 const logout = (req, res) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const cookie = req.headers.cookie;
-            const prevToken = cookie.split('=')[1];
+            const cookie = req.headers?.authorization;
+            const prevToken = cookie?.split(' ')[1];
 
             if (!prevToken) {
                 resolve({

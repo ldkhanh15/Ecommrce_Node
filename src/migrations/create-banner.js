@@ -16,7 +16,10 @@ module.exports = {
       end: {
         type: Sequelize.DATE
       },
-      description:{
+      title:{
+        type: Sequelize.STRING
+      },
+      subTitle:{
         type: Sequelize.STRING
       },
       image:{
@@ -24,6 +27,9 @@ module.exports = {
       },
       fileName:{
         type: Sequelize.STRING
+      },
+      main:{
+        type:Sequelize.BOOLEAN
       },
       createdAt: {
         allowNull: false,

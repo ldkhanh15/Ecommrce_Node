@@ -15,14 +15,13 @@ const getBill = (req) => {
                 })
             } else if (req.user.role === 'R2') {
                 let id = req.user.id;
-                console.log(id);
                 data = await db.Bill.findAll({
                     where: {
                         idShop: id
                     },
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['name', 'price']
+                            model: db.Product, as: 'product', attributes: ['name', 'price','mainImage']
                         }
                     ]
                 })
@@ -34,7 +33,7 @@ const getBill = (req) => {
                     },
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['name', 'price']
+                            model: db.Product, as: 'product', attributes: ['name', 'price','mainImage']
                         }
                     ]
                 })

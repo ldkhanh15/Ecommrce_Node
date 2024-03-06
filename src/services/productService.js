@@ -1,45 +1,34 @@
 import db from '../models/index'
 import joi from 'joi'
-import { color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
+import { brand,color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 
 const getProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = !req.body.id ?
+            console.log(req.query.id);
+            let data = !req.query.id ?
                 await db.Product.findAll({
-                    include: [
+                    include:[
                         {
-                            model: db.ProductDetail, as: 'detailProduct', attributes: ['additional', 'brand', 'quantity']
-                        },
-                        {
-                            model: db.Shop, as: 'shop', attributes: ['name', 'avatar', 'address', 'phone', 'introduce']
-                        },
-                        {
-                            model: db.Cate, as: 'cate', attributes: ['name']
-                        },
-                        {
-                            model: db.ProductImage, as: 'image', attributes: ['link']
-                        },
-                        {
-                            model: db.ProductReview, as: 'review', attributes: ['star']
+                            model:db.Shop,as:'shop',attributes:['username']
                         }
-                    ],
+                    ]
                 })
                 :
                 await db.Product.findOne({
                     where: {
-                        id: req.body.id
+                        id: req.query.id
                     },
                     include: [
+                        {
+                            model: db.ProductDetail, as: 'detailProduct', attributes: ['additional', 'quantity', 'description']
+                        },
                         {
                             model: db.Cate, as: 'cate', attributes: ['name']
                         },
                         {
                             model: db.ProductImage, as: 'image', attributes: ['link']
-                        },
-                        {
-                            model: db.ProductReview, as: 'review', attributes: ['star']
                         },
                         {
                             model: db.Color, as: 'color', attributes: ['name']
@@ -62,10 +51,80 @@ const getProduct = (req) => {
         }
     })
 }
+const getProductShop = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
+                let { id } = req.body;
+
+                let data = await db.Product.findOne({
+                    where: { id },
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['avatar', 'address', 'name', 'phone', 'introduce', 'avgStar', 'comment']
+                        },
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getProductComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
+                let { id } = req.body;
+
+                let data = await db.Product.findOne({
+                    where: { id },
+                    include: [
+                        {
+                            model: db.ProductReview, as: 'review', attributes: ['star', 'comment', 'avatar', 'idParent'],
+                            include: [
+                                {
+                                    model: db.User, as: 'user', attributes: ['name', 'avatar']
+                                }
+                            ]
+                        },
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+
 const createProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity }).validate(req.body)
+            const error = joi.object({ color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity ,brand}).validate(req.body)
             if (error.error) {
                 Promise.all(req.files?.map(async (file) => {
                     await cloudinary.uploader.destroy(file.filename)
@@ -75,17 +134,30 @@ const createProduct = (req) => {
                     message: error.error?.details[0].message
                 })
             } else {
-
+                let cates = await db.Cate.findAll({
+                    where: { id: req.body.idCate }
+                })
+                if (cates) {
+                    let quantity = cates[0].quantity + 1;
+                    await db.Cate.update({
+                        quantity: quantity,
+                    },{
+                        where:{
+                            id:req.body.idCate,
+                        }
+                    })
+                }
                 let product = await db.Product.create({
                     ...req.body,
                     sold: 0,
                     name: req.body.nameProduct,
                     mainImage: req.files[0].path,
                     hoverImage: req.files[1].path,
-                    idShop: req.user.id
+                    idShop: req.user.id,
+                    avgStar:0,
                 })
                 await product.save();
-                Promise.all(req.files?.map(async (file, index) => {
+                Promise.all(req.files?.map(async (file) => {
                     let image = await db.ProductImage.create({
                         idProduct: product.id,
                         link: file.path,
@@ -336,12 +408,11 @@ const deleteProduct = (req) => {
     })
 }
 
-
-
-
 module.exports = {
     getProduct,
     createProduct,
     deleteProduct,
-    updateProduct
+    updateProduct,
+    getProductShop,
+    getProductComment
 }

@@ -40,12 +40,12 @@ module.exports = {
             idCate: {
                 type: Sequelize.STRING
             },
-            description: {
+            brand: {
                 type: Sequelize.STRING
             },
             introduce: {
                 type: Sequelize.STRING
-            },
+              },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

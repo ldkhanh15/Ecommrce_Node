@@ -2,7 +2,7 @@ import bannerService from '../services/bannerService'
 
 const getBanner = async (req, res) => {
     try {
-        let data = await bannerService.getBanner();
+        let data = await bannerService.getBanner(req);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);

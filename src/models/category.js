@@ -18,6 +18,8 @@ module.exports = (sequelize, DataTypes) => {
     image: DataTypes.STRING,
     fileName: DataTypes.STRING,
     name: DataTypes.STRING,
+    quantity: DataTypes.INTEGER,
+    featured: DataTypes.BOOLEAN,
   }, {
     sequelize,
     modelName: 'Cate',
