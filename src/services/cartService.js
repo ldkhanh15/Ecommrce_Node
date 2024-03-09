@@ -5,12 +5,12 @@ import joi from 'joi'
 const getCart = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let { id } = req.body;
-            let data = await db.Cart.findAll({
-                where: id ? { idUser: id } : {},
+            let { id } = req.query;
+            let data = await db.Cart.findOne({
+                where: { idUser: id },
                 include: [
                     {
-                        model: db.Product, as: 'product', attributes: ['name']
+                        model: db.Product, as: 'product', attributes: ['id','sale','name','mainImage','price','avgStar']
                     }
                 ]
             })
@@ -26,7 +26,8 @@ const getCart = (req) => {
 const addCart = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, quantity, idProduct }).validate(req.body)
+            console.log(req.body);
+            const error = joi.object({ quantity, idProduct }).validate(req.body)
             if (error.error) {
                 resolve({
                     message: error.error?.details[0]?.message,
@@ -34,7 +35,7 @@ const addCart = (req) => {
                 })
             } else {
                 let [cart, created] = await db.Cart.findOrCreate({
-                    where: { idUser: req.body.id },
+                    where: { idUser: req?.user?.id },
                     defaults: {
                         idUser: req?.user?.id
                     },
@@ -89,7 +90,7 @@ const addCart = (req) => {
 const deleteCart = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, idProduct }).validate(req.body)
+            const error = joi.object({ id, idProduct }).validate(req.query)
             if (error.error) {
                 resolve({
                     message: error.error?.details[0]?.message,
@@ -97,7 +98,7 @@ const deleteCart = (req) => {
                 })
             } else {
                 let [cart, created] = await db.Cart.findOrCreate({
-                    where: { idUser: req.body.id }
+                    where: { idUser: req.query.id }
                 })
                 if (!cart) {
                     resolve({
@@ -108,12 +109,48 @@ const deleteCart = (req) => {
                     await db.CartProduct.destroy({
                         where: {
                             idCart: cart.id,
-                            idProduct: req.body.idProduct
+                            idProduct: req.query.idProduct
                         }
                     })
 
                     resolve({
                         message: 'Delete product in Cart successfully',
+                        code: 1
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const deleteCartAll = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.query)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0]?.message,
+                    code: 0
+                })
+            } else {
+                let [cart, created] = await db.Cart.findOrCreate({
+                    where: { idUser: req.query.id }
+                })
+                if (!cart) {
+                    resolve({
+                        message: 'Cart ID not found',
+                        code: 0
+                    })
+                } else {
+                    await db.CartProduct.destroy({
+                        where: {
+                            idCart: cart.id,
+                        }
+                    })
+
+                    resolve({
+                        message: 'Delete all product in Cart successfully',
                         code: 1
                     })
                 }
@@ -153,7 +190,7 @@ const updateCart = (req) => {
 
                     resolve({
                         message: 'Update product in Cart successfully',
-                        code: 1
+                        code: 1,
                     })
                 }
             }
@@ -168,4 +205,5 @@ module.exports = {
     deleteCart,
     addCart,
     updateCart,
+    deleteCartAll
 }

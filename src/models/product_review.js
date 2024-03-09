@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       ProductReview.belongsTo(models.Product, { foreignKey: 'idProduct', as: 'review' })
+      ProductReview.belongsTo(models.User,{foreignKey:'idUser', as: 'user' })
     }
   }
   ProductReview.init({
@@ -20,7 +21,6 @@ module.exports = (sequelize, DataTypes) => {
     idBill: DataTypes.STRING,
     comment: DataTypes.STRING,
     star: DataTypes.INTEGER,
-    avatar: DataTypes.STRING,
     idParent: DataTypes.STRING,
   }, {
     sequelize,

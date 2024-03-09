@@ -1,19 +1,16 @@
 import db from '../models/index'
 import joi from 'joi'
-import { color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
+import { idParent, idProduct, idBill, star, comment, idBuyer, brand, color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 
 const getProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = !req.body.id ?
+            let data = !req.query.id ?
                 await db.Product.findAll({
                     include: [
                         {
-                            model: db.ProductDetail, as: 'detailProduct', attributes: ['additional', 'brand', 'quantity']
-                        },
-                        {
-                            model: db.Shop, as: 'shop', attributes: ['name', 'avatar', 'address', 'phone', 'introduce']
+                            model: db.Shop, as: 'shop', attributes: ['username']
                         },
                         {
                             model: db.Cate, as: 'cate', attributes: ['name']
@@ -24,22 +21,22 @@ const getProduct = (req) => {
                         {
                             model: db.ProductReview, as: 'review', attributes: ['star']
                         }
-                    ],
+                    ]
                 })
                 :
                 await db.Product.findOne({
                     where: {
-                        id: req.body.id
+                        id: req.query.id
                     },
                     include: [
+                        {
+                            model: db.ProductDetail, as: 'detailProduct', attributes: ['additional', 'quantity', 'description']
+                        },
                         {
                             model: db.Cate, as: 'cate', attributes: ['name']
                         },
                         {
                             model: db.ProductImage, as: 'image', attributes: ['link']
-                        },
-                        {
-                            model: db.ProductReview, as: 'review', attributes: ['star']
                         },
                         {
                             model: db.Color, as: 'color', attributes: ['name']
@@ -50,6 +47,9 @@ const getProduct = (req) => {
                         {
                             model: db.Combo, as: 'combo', attributes: ['name']
                         },
+                        {
+                            model: db.ProductReview, as: 'review', attributes: ['star']
+                        }
                     ],
                 })
             resolve({
@@ -62,10 +62,129 @@ const getProduct = (req) => {
         }
     })
 }
+const getProductShop = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.query)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
+                let { id } = req.query;
+
+                let data = await db.Product.findOne({
+                    where: { id },
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['avatar', 'address', 'name', 'phone', 'introduce', 'avgStar', 'comment']
+                        },
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getProductComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.query)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0].message
+                })
+            } else {
+                let { id } = req.query;
+                let data = await db.ProductReview.findAll({
+                    where: { idProduct:id },
+                    include: [
+                        {
+                            model: db.User, as: 'user', attributes: ['name', 'avatar']
+                        }
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const createProductComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ idBuyer, idBill, idProduct, comment, star, idParent }).validate(req.body);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error.details[0].message
+                })
+            } else {
+                let review = await db.ProductReview.create({
+                    ...req.body,
+                    idUser: req.body.idBuyer
+                })
+                await review.save();
+                let data = await db.Product.findAll({
+                    where: {
+                        id: req.body.idProduct
+                    },
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['id']
+                        }
+                    ]
+                })
+                if (data) {
+                    let id = data[0]?.shop?.id;
+                    let shop = await db.Shop.findAll({
+                        where: { id }
+                    })
+
+                    let comment = shop[0].comment + 1;
+                    let avgStar = (shop[0].avgStar * shop[0].comment + parseInt(req.body.star)) / comment;
+
+                    await db.Shop.update({
+                        avgStar, comment
+                    }, {
+                        where: { id }
+                    })
+                    resolve({
+                        code: 1,
+                        message: 'Successfully comment'
+                    })
+                } else {
+                    resolve({
+                        code: 0,
+                        message: 'Cannot find shop'
+                    })
+                }
+
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 const createProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity }).validate(req.body)
+            const error = joi.object({ color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity, brand }).validate(req.body)
             if (error.error) {
                 Promise.all(req.files?.map(async (file) => {
                     await cloudinary.uploader.destroy(file.filename)
@@ -75,17 +194,19 @@ const createProduct = (req) => {
                     message: error.error?.details[0].message
                 })
             } else {
-
+                let cate = await db.Cate.findOne({
+                    where: { id: req.body.idCate }
+                })
+                cate.increment("quantity")
                 let product = await db.Product.create({
                     ...req.body,
                     sold: 0,
                     name: req.body.nameProduct,
                     mainImage: req.files[0].path,
-                    hoverImage: req.files[1].path,
-                    idShop: req.user.id
+                    hoverImage: req.files[1].path
                 })
                 await product.save();
-                Promise.all(req.files?.map(async (file, index) => {
+                Promise.all(req.files?.map(async (file) => {
                     let image = await db.ProductImage.create({
                         idProduct: product.id,
                         link: file.path,
@@ -336,12 +457,12 @@ const deleteProduct = (req) => {
     })
 }
 
-
-
-
 module.exports = {
     getProduct,
     createProduct,
     deleteProduct,
-    updateProduct
+    updateProduct,
+    getProductComment,
+    getProductShop,
+    createProductComment
 }

@@ -24,12 +24,6 @@ module.exports = {
       star: {
         type: Sequelize.INTEGER
       },
-      avatar: {
-        type: Sequelize.STRING
-      },
-      fileName: {
-        type: Sequelize.STRING
-      },
       idParent:{
         type: Sequelize.STRING
       },

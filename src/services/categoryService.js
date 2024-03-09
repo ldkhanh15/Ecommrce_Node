@@ -1,5 +1,5 @@
 import db from '../models'
-import { name, id } from '../helpers/joi_schema'
+import { name, id, quantity, featured } from '../helpers/joi_schema'
 import joi from 'joi'
 import cloudinary from 'cloudinary'
 
@@ -7,14 +7,27 @@ const getCate = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             let { id } = req.body;
-            let data = await db.Cate.findAll({
-                where: id ? { id } : {}
-            })
-            resolve({
-                message: 'Successfully',
-                data,
-                code:1
-            })
+            const error = joi.object({ featured }).validate(req.query)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0]?.message,
+                    code: 0
+                })
+            } else {
+                let data = await db.Cate.findAll({
+                    where: id ? {
+                        id,
+                        featured: req.query.featured === "true" ? true : false
+                    } : {
+                        featured: req.query.featured === "true" ? true : false
+                    }
+                })
+                resolve({
+                    message: 'Successfully',
+                    data,
+                    code: 1
+                })
+            }
         } catch (error) {
             reject(error)
         }
@@ -26,13 +39,15 @@ const createCate = (req) => {
             let image = req?.file?.path
             let fileName = req?.file?.filename
             if (!fileName || !image) {
+                await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
                     message: 'Image is required',
-                    code:0
+                    code: 0
                 })
             }
-            const error = joi.object({ name }).validate(req.body)
+            const error = joi.object({ name, quantity, featured }).validate(req.body)
             if (error.error) {
+                await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
                     message: error.error?.details[0]?.message,
                     code: 0
@@ -41,12 +56,13 @@ const createCate = (req) => {
                 const cate = await db.Cate.create({
                     image,
                     fileName,
-                    name: req.body.name,
+                    featured: req.body.featured === "true" ? true : false,
+                    ...req.body
                 })
                 await cate.save();
                 resolve({
                     message: 'Successfully',
-                    code:1
+                    code: 1
                 })
             }
         } catch (error) {
@@ -97,12 +113,13 @@ const updateCate = (req) => {
             let image = req?.file?.path
             let fileName = req?.file?.filename
             if (!fileName || !image) {
+                await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
                     message: 'Image is required',
                     code: 0
                 })
             }
-            const error = joi.object({ id, name }).validate(req.body)
+            const error = joi.object({ id, name, quantity, featured }).validate(req.body)
             if (error.error) {
                 await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
@@ -120,11 +137,12 @@ const updateCate = (req) => {
                         code: 0
                     })
                 } else {
-                    if(cate.fileName){
+                    if (cate.fileName) {
                         await cloudinary.uploader.destroy(cate.fileName)
                     }
                     await db.Cate.update({
-                        name: req.body?.name,
+                        ...req.body,
+                        featured: req.body.featured === "true" ? true : false,
                         fileName,
                         image
                     }, {

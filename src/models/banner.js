@@ -16,9 +16,11 @@ module.exports = (sequelize, DataTypes) => {
   Banner.init({
     start:DataTypes.DATE,
     end:DataTypes.DATE,
-    description:DataTypes.STRING,
+    title:DataTypes.STRING,
+    subTitle:DataTypes.STRING,
     image:DataTypes.STRING,
     fileName:DataTypes.STRING,
+    main:DataTypes.BOOLEAN,
   }, {
     sequelize,
     modelName: 'Banner',

@@ -6,7 +6,7 @@ const getVendor = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             let data = await db.Shop.findAll({
-                where: req.body.id ? { id: req.body.id } : {},
+                where: req.query.id ? { id: req.query.id } : {},
             })
             resolve({
                 data,
@@ -93,19 +93,28 @@ const updateVendor = (req) => {
         try {
             const error = joi.object({ id, name, username, phone, bank, introduce, address }).validate(req.body)
             if (error.error) {
-                await cloudinary.uploader.destroy(req?.file?.filename)
+                if (req.file && req.file.filename) {
+                    await cloudinary.uploader.destroy(req?.file?.filename)
+                }
                 resolve({
                     code: 0,
                     message: error.error?.details[0].message
                 })
             } else {
-                req.body.avatar = req.file?.path
-                req.body.fileName = req.file?.filename
+                // console.log(req.file);
+                // console.log(req.body.image);
+                // if (req.file && req.file.filename) {
+                //     req.body.avatar = req.file?.path
+                //     req.body.fileName = req.file?.filename
+                // }
+
                 let vendor = await db.Shop.findOne({
                     where: { id: req.body.id }
                 })
                 if (!vendor) {
-                    await cloudinary.uploader.destroy(req?.file?.filename)
+                    if (req.file && req.file.filename) {
+                        await cloudinary.uploader.destroy(req?.file?.filename)
+                    }
                     resolve({
                         code: 0,
                         message: 'Vendor ID not found'
@@ -121,7 +130,9 @@ const updateVendor = (req) => {
                 }
             }
         } catch (error) {
-            await cloudinary.uploader.destroy(req?.file?.filename)
+            if (req.file && req.file.filename) {
+                await cloudinary.uploader.destroy(req?.file?.filename)
+            }
             reject(error)
         }
     })

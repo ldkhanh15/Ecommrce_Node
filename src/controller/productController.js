@@ -8,9 +8,33 @@ const getProduct = async (req, res) => {
         console.log(error);
     }
 }
+const getProductShop = async (req, res) => {
+    try {
+        let data = await productService.getProductShop(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+const getProductComment = async (req, res) => {
+    try {
+        let data = await productService.getProductComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 const createProduct = async (req, res) => {
     try {
         let data = await productService.createProduct(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+const createProductComment = async (req, res) => {
+    try {
+        let data = await productService.createProductComment(req);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);
@@ -37,4 +61,7 @@ module.exports = {
     createProduct,
     deleteProduct,
     updateProduct,
+    getProductShop,
+    getProductComment,
+    createProductComment
 }

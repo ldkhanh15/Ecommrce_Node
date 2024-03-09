@@ -28,6 +28,15 @@ const deleteCart = async (req, res) => {
     }
 }
 
+const deleteCartAll = async (req, res) => {
+    try {
+        let data = await cartService.deleteCartAll(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const updateCart = async (req, res) => {
     try {
         let data = await cartService.updateCart(req);
@@ -42,4 +51,5 @@ module.exports = {
     addCart,
     deleteCart,
     updateCart,
+    deleteCartAll
 }

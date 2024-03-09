@@ -36,6 +36,12 @@ module.exports = {
             introduce:{
                 type: Sequelize.STRING
             },
+            avgStar: {
+                type: Sequelize.FLOAT,
+            },
+            comment:{
+                type: Sequelize.INTEGER,
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

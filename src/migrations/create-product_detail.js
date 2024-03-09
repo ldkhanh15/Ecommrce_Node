@@ -15,9 +15,10 @@ module.exports = {
       additional: {
         type: Sequelize.STRING
       },
-      brand: {
+      description: {
         type: Sequelize.STRING
       },
+
       quantity: {
         type: Sequelize.INTEGER,
         defaultValue: 0

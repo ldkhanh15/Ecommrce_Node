@@ -6,11 +6,8 @@ import authController from '../controller/authController'
 
 
 //PRIVATE ROUTES
-router.use(authController.verifyToken)
-
-router.use(authController.isSeller)
 router.get('/', sizeController.getSize)
-
+router.use(authController.verifyToken)
 router.use(authController.isAdmin)
 router.put('/update', sizeController.updateSize)
 router.post('/create', sizeController.createSize)

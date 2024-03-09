@@ -21,11 +21,16 @@ export const fileName = joi.string().required();
 export const start = joi.string().required();
 export const end = joi.string().required();
 export const description = joi.string().required();
+export const title = joi.string().required();
+export const subTitle = joi.string();
+export const main = joi.string().required();
 //PAYMENT
 export const payment = joi.string().required();
 //CART
 export const quantity = joi.number().required();
 
+//CATEGORY
+export const featured = joi.string().required();
 //BILL
 export const idProduct = joi.string().required();
 export const idAddress = joi.string().required();
@@ -61,7 +66,12 @@ export const price = joi.number().required();
 export const sale = joi.number().required();
 export const idCate = joi.string().required();
 export const additional = joi.string();
+export const brand = joi.string();
 export const size = joi.array();
 export const color = joi.array();
 export const combo = joi.array();
 
+//COMMENT
+export const star = joi.string().required();
+export const idBill = joi.string().required();
+export const idParent = joi.string();

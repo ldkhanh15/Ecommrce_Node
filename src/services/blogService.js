@@ -8,7 +8,6 @@ const getBlog = (req) => {
             let data = await db.Blog.findAll({
                 where: req.body?.id ? { id: req.body.id } : {}
             });
-            console.log(data.view);
             if (req.body.id) {
                 await db.Blog.update({
                     view: data[0].view + 1

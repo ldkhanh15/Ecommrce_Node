@@ -18,6 +18,12 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
+      quantity: {
+        type: Sequelize.INTEGER
+      },
+      featured: {
+        type: Sequelize.BOOLEAN
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

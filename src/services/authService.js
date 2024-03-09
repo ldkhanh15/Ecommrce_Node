@@ -6,7 +6,7 @@ const login = (req, res) => {
     return new Promise(async (resolve, reject) => {
         try {
             const { email, password } = req.body;
-
+            console.log(email, password);
             let existingUser = await db.User.findOne({
                 where: {
                     email
@@ -33,7 +33,7 @@ const login = (req, res) => {
                 req.cookies[`${existingUser.id}`] = ""
             }
 
-            res.cookie(String(existingUser.id, existingUser.role), token, {
+            res.cookie("token", token, {
                 path: '/',
                 expires: new Date(Date.now() + 60 * 60 * 24),
                 httpOnly: true,
@@ -54,8 +54,8 @@ const login = (req, res) => {
 const logout = (req, res) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const cookie = req.headers.cookie;
-            const prevToken = cookie.split('=')[1];
+            const cookie = req.headers?.authorization;
+            const prevToken = cookie?.split(' ')[1];
 
             if (!prevToken) {
                 resolve({
