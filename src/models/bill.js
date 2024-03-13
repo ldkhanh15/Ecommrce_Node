@@ -14,10 +14,11 @@ module.exports = (sequelize, DataTypes) => {
       Bill.hasMany(models.BillProduct, { foreignKey: 'idBill', as: 'quantityProduct' });
 
       Bill.belongsTo(models.Deliver, { foreignKey: 'idDeliver', as: 'deliver' })
-      Bill.belongsTo(models.Address, { foreignKey: 'idAddress', as: 'address' })
+      Bill.belongsTo(models.AddressUser, { foreignKey: 'idAddress', as: 'address' })
       Bill.belongsTo(models.StatusBill, { foreignKey: 'idStatus', as: 'status' })
       Bill.belongsTo(models.Payment, { foreignKey: 'idPayment', as: 'payment' })
-
+      Bill.belongsTo(models.Shop, { foreignKey: 'idShop', as: 'shop' })
+      Bill.belongsTo(models.User,{foreignKey: 'idBuyer', as: 'user' })
       Bill.belongsToMany(models.Product, {
         through: 'BillProduct',
         foreignKey: 'idBill',

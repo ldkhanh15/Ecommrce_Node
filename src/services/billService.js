@@ -1,7 +1,64 @@
 import db from '../models'
 import joi from 'joi'
-import { id, idStatus, idBuyer, idShop, idAddress, idDeliver, idPayment, totalPrice, products } from '../helpers/joi_schema'
+import { id, idStatus, idBuyer, idShop, idAddress, idDeliver, idPayment, totalPrice, products, status } from '../helpers/joi_schema'
 const getBill = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data;
+            if (req.user.role === 'R1') {
+                data = await db.Bill.findAll({
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['name']
+                        },
+                        {
+                            model:db.StatusBill, as: 'status', attributes: ['status']
+                        }
+                    ]
+                })
+            } else if (req.user.role === 'R2') {
+                let id = req.user.id;
+                data = await db.Bill.findAll({
+                    where: {
+                        idShop: id
+                    },
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['name']
+                        },
+                        {
+                            model:db.StatusBill, as: 'status', attributes: ['status']
+                        }
+                    ]
+                })
+            } else if (req.user.role === 'R3') {
+                let { id } = req.user.id;
+                data = await db.Bill.findAll({
+                    where: {
+                        idBuyer: id
+                    },
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['name']
+                        },
+                        {
+                            model:db.StatusBill, as: 'status', attributes: ['status']
+                        }
+                    ]
+                })
+            }
+            resolve({
+                message: 'Successfully',
+                data,
+                code: 1
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getDetailBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             let data;
@@ -21,7 +78,7 @@ const getBill = (req) => {
                     },
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['name', 'price','mainImage']
+                            model: db.Product, as: 'product', attributes: ['name', 'price', 'mainImage']
                         }
                     ]
                 })
@@ -33,7 +90,7 @@ const getBill = (req) => {
                     },
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['name', 'price','mainImage']
+                            model: db.Product, as: 'product', attributes: ['name', 'price', 'mainImage']
                         }
                     ]
                 })
@@ -166,7 +223,7 @@ const deleteBill = (req) => {
 const updateBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, products, idStatus }).validate(req.body);
+            const error = joi.object({ id, idBuyer, idShop, totalPrice, idAddress, idDeliver, idPayment, products }).validate(req.body);
             if (error.error) {
                 resolve({
                     code: 0,
@@ -184,7 +241,7 @@ const updateBill = (req) => {
                         message: 'Bill ID not found'
                     })
                 }
-                await db.Bill.update({ idStatus: req.body?.idStatus }, {
+                await db.Bill.update(req.body, {
                     where: { id: req.body.id }
                 })
                 req.body?.products.map(async (product) => {
@@ -209,9 +266,172 @@ const updateBill = (req) => {
         }
     })
 }
+const updateStatusBill = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, idStatus }).validate(req.body);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0]?.message
+                })
+            } else {
+                let bill = await db.Bill.findOne({
+                    where: {
+                        id: req.body.id,
+                    }
+                })
+                if (!bill) {
+                    resolve({
+                        message: 'bill id not found',
+                        code: 0
+                    })
+                } else {
+                    let status = await db.BillStatus.findOne({
+                        where: {
+                            id: req.body.idStatus,
+                        }
+                    })
+                    if (!status) {
+                        resolve({
+                            message: 'status not found',
+                            code: 0
+                        })
+                    } else {
+
+                        await db.Bill.update(req.body, {
+                            where: { id: req.body.id }
+                        })
+                        resolve({
+                            message: 'Successfully updated status bill',
+                            code: 1
+                        })
+                    }
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getStatus = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data = await db.StatusBill.findAll();
+            resolve({
+                message: 'Successfully',
+                code: 1,
+                data
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const createStatus = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ status }).validate(req.body);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0]?.message
+                })
+            } else {
+                let status = await db.StatusBill.create({
+                    ...req.body
+                })
+                await status.save();
+                resolve({
+                    message: 'Successfully created',
+                    code: 1
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const updateStatus = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, status }).validate(req.body);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0]?.message
+                })
+            } else {
+
+                let status = await db.StatusBill.findOne({
+                    where: { id: req.body.id }
+                })
+                if (!status) {
+                    resolve({
+                        message: 'Status id not found',
+                        code: 0
+                    })
+                } else {
+                    await db.StatusBill.update(req.body, {
+                        where: { id: status.id }
+                    })
+                    resolve({
+                        message: 'Successfully updated',
+                        code: 1
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const deleteStatus = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.query);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0]?.message
+                })
+            } else {
+
+                let status = await db.StatusBill.findOne({
+                    where: { id: req.query.id }
+                })
+                if (!status) {
+                    resolve({
+                        message: 'Status id not found',
+                        code: 0
+                    })
+                } else {
+                    await db.StatusBill.destroy({
+                        where: {
+                            id: req.query.id,
+                        }
+                    })
+                    resolve({
+                        message: 'Successfully updated',
+                        code: 1
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     getBill,
     createBill,
     deleteBill,
     updateBill,
+    getStatus,
+    createStatus,
+    deleteStatus,
+    updateStatus,
+    updateStatusBill
+
 }

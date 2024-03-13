@@ -6,7 +6,61 @@ import { id, remain, quantity, limit, description, minBill, voucherCode, start, 
 const getVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
+            if(req.query.id){
+                let data=await db.Voucher.findOne({
+                    where:{
+                        id:req.query.id
+                    },
+                    include:[
+                        {
+                            model:db.Shop,as:'shop',attributes:['name','avatar']
+                        }
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
             const data = await db.Voucher.findAll({})
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getVoucherOfShop = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (req.query.id) {
+                if (req.user.role !== 'R1' && req.query.id !== String(req.user.id)) {
+                    resolve({
+                        message: 'Cannot find voucher',
+                        code: 0
+                    })
+                }
+                let data = await db.Shop.findOne({
+                    where: {
+                        id: req.query.id
+                    },
+                    include: [
+                        {
+                            model: db.Voucher, as: 'voucher', attributes: ['start', 'end', 'maVoucher', 'id', 'quantity', 'remain', 'limit', 'description', 'salePT', 'salePrice', 'minBill', 'type'],
+                        }
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
+            const data = await db.Voucher.findAll()
             resolve({
                 data,
                 code: 1,
@@ -84,7 +138,7 @@ const deleteVoucher = (req) => {
 const updateVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, voucherCode,remain, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
+            const error = joi.object({ id, voucherCode, remain, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
                 .validate(req.body)
             if (error.error) {
                 resolve({
@@ -126,4 +180,5 @@ module.exports = {
     createVoucher,
     deleteVoucher,
     updateVoucher,
+    getVoucherOfShop
 }

@@ -14,14 +14,15 @@ module.exports = (sequelize, DataTypes) => {
       Shop.belongsTo(models.User, { foreignKey: 'idUser', as: 'user' })
 
       Shop.hasMany(models.Product, { foreignKey: 'idShop', as: 'product' })
+      Shop.hasMany(models.Bill, { foreignKey: 'idShop', as: 'bill' })
       Shop.belongsToMany(models.Deliver, {
-        through:'ShopDeliver',
+        through: 'ShopDeliver',
         foreignKey: 'idShop',
         otherKey: 'idDeliver',
         as: 'deliver'
       })
       Shop.belongsToMany(models.Voucher, {
-        through:'VoucherShop',
+        through: 'VoucherShop',
         foreignKey: 'idShop',
         otherKey: 'idVoucher',
         as: 'voucher'
@@ -29,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Shop.init({
-    idUser:DataTypes.STRING,
+    idUser: DataTypes.STRING,
     name: DataTypes.STRING,
     username: DataTypes.STRING,
     avatar: DataTypes.STRING,

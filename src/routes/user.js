@@ -12,8 +12,16 @@ router.get('/', userController.getUser)
 router.use(authController.isBuyer)
 router.put('/update', userController.updateUser)
 
+router.get('/address', userController.getAddress)
+router.post('/address/create', userController.createAddress)
+router.put('/address/update', userController.updateAddress)
+router.delete('/address/delete', userController.deleteAddress)
+
+router.use(authController.isSeller)
+router.get('/customer', userController.getCustomer)
 router.use(authController.isAdmin)
 router.post('/create', userController.createUser)
 router.delete('/delete', userController.deleteUser)
+
 
 module.exports = router

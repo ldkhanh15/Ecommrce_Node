@@ -35,10 +35,59 @@ const updateBill = async (req, res) => {
         console.log(error);
     }
 }
+const updateStatusBill = async (req, res) => {
+    try {
+        let data = await billService.updateStatusBill(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const getStatus = async (req, res) => {
+    try {
+        let data = await billService.getStatus(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const createStatus = async (req, res) => {
+    try {
+        let data = await billService.createStatus(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const updateStatus = async (req, res) => {
+    try {
+        let data = await billService.updateStatus(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const deleteStatus = async (req, res) => {
+    try {
+        let data = await billService.deleteStatus(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 module.exports = {
     getBill,
     createBill,
     deleteBill,
     updateBill,
+    getStatus,
+    createStatus,
+    updateStatus,
+    deleteStatus,
+    updateStatusBill
 }

@@ -10,7 +10,12 @@ const getCart = (req) => {
                 where: { idUser: id },
                 include: [
                     {
-                        model: db.Product, as: 'product', attributes: ['id','sale','name','mainImage','price','avgStar']
+                        model: db.Product, as: 'product', attributes: ['id', 'sale', 'name', 'mainImage', 'price'],
+                        include:[
+                            {
+                                model:db.ProductReview,as:'review',attributes:['star']
+                            }
+                        ]
                     }
                 ]
             })

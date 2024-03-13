@@ -1,6 +1,6 @@
 import db from '../models/index'
 import joi from 'joi'
-import { idParent, idProduct, idBill, star, comment, idBuyer, brand, color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
+import { idUser, idParent, idProduct, idBill, star, comment, idBuyer, brand, color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 
 const getProduct = (req) => {
@@ -62,6 +62,41 @@ const getProduct = (req) => {
         }
     })
 }
+const getProductOfShop = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (req.query.id) {
+                if (req.user.role !== 'R1' && req.query.id !== String(req.user.id)) {
+                    resolve({
+                        message: 'Cannot find product',
+                        code: 0
+                    })
+                }
+            }
+
+            let data = await db.Product.findAll({
+                where: req.query.id ? { idShop: req.query.id } : {},
+                include: [
+                    {
+                        model: db.ProductDetail, as: 'detailProduct', attributes: ['quantity']
+                    },
+                    {
+                        model:db.Shop,as:'shop',attributes:['name']
+                    }
+                ]
+            })
+
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 const getProductShop = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -106,7 +141,7 @@ const getProductComment = (req) => {
             } else {
                 let { id } = req.query;
                 let data = await db.ProductReview.findAll({
-                    where: { idProduct:id },
+                    where: { idProduct: id },
                     include: [
                         {
                             model: db.User, as: 'user', attributes: ['name', 'avatar']
@@ -124,6 +159,7 @@ const getProductComment = (req) => {
         }
     })
 }
+
 const createProductComment = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -149,8 +185,8 @@ const createProductComment = (req) => {
                         }
                     ]
                 })
-                if (data) {
-                    let id = data[0]?.shop?.id;
+                if (data && data[0].shop) {
+                    let id = data[0].shop.id;
                     let shop = await db.Shop.findAll({
                         where: { id }
                     })
@@ -174,6 +210,134 @@ const createProductComment = (req) => {
                     })
                 }
 
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const updateProductComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, comment, star }).validate(req.body);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error.details[0].message
+                })
+            } else {
+                let commentProduct = await db.ProductReview.findOne({
+                    where: { id: req.body.id }
+                })
+                if (!commentProduct) {
+                    resolve({
+                        message: 'Product review not found',
+                        code: 0
+                    })
+                } else {
+
+                    await db.ProductReview.update({
+                        ...req.body
+                    }, {
+                        where: {
+                            id: req.body.id
+                        }
+                    })
+                    let product = await db.Product.findOne({
+                        where: {
+                            id: commentProduct.idProduct
+                        },
+                        include: [
+                            {
+                                model: db.Shop, as: 'shop', attributes: ['id']
+                            }
+                        ]
+                    })
+                    let shop = await db.Shop.findOne({
+                        where: {
+                            id: product.shop.id
+                        }
+                    })
+                    let avgStar = shop.avgStar
+                    let comment = shop.comment
+                    avgStar = (comment * avgStar - commentProduct.star + parseFloat(req.body.star)) / (comment);
+
+                    await db.Shop.update({
+                        avgStar, comment
+                    }, {
+                        where: {
+                            id: product.shop.id
+                        }
+                    })
+                    resolve({
+                        message: 'Updated product comment successfully',
+                        code: 1
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const deleteProductComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.query);
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error.details[0].message
+                })
+            } else {
+                let productComment = await db.ProductReview.findOne({
+                    where: { id: req.query.id }
+                })
+                if (!productComment) {
+                    resolve({
+                        message: 'Product review not found',
+                        code: 0
+                    })
+                } else {
+                    let product = await db.Product.findOne({
+                        where: {
+                            id: productComment.idProduct
+                        },
+                        include: [
+                            {
+                                model: db.Shop, as: 'shop', attributes: ['id']
+                            }
+                        ]
+                    })
+                    await db.ProductReview.destroy({
+                        where: {
+                            id: req.query.id
+                        }
+                    })
+                    let shop = await db.Shop.findOne({
+                        where: {
+                            id: product.shop.id
+                        }
+                    })
+                    let avgStar = shop.avgStar
+                    let comment = shop.comment
+                    avgStar = (comment * avgStar - productComment.star) / (comment - 1);
+                    comment--;
+                    await db.Shop.update({
+                        avgStar, comment
+                    }, {
+                        where: {
+                            id: product.shop.id
+                        }
+                    })
+
+                    resolve({
+                        message: 'Delete product comment successfully',
+                        code: 1
+                    })
+                }
             }
         } catch (error) {
             reject(error)
@@ -456,7 +620,89 @@ const deleteProduct = (req) => {
         }
     })
 }
+const likeProduct = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ idUser, idProduct }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let user = await db.User.findOne({
+                    where: { id: req.body.idUser }
+                })
+                let product = await db.Product.findOne({
+                    where: { id: req.body.idProduct }
+                })
 
+                if (!product || !user) {
+                    resolve({
+                        message: 'Not found',
+                        code: 0
+                    })
+                } else {
+                    let like = await db.UserProduct.create({
+                        ...req.body
+                    })
+                    await like.save()
+                    resolve({
+                        message: 'Like product successfully',
+                        code: 1
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const unlikeProduct = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, idUser, idProduct }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                if (req.user.role !== 'R1' && req.body.idUser !== String(req.user.id)) {
+                    resolve({
+                        message: 'You cannot unlike this product',
+                        code: 0
+                    })
+                } else {
+
+                    let like = await db.UserProduct.findOne({
+                        where: {
+                            id: req.body.id
+                        }
+                    })
+                    if (!like) {
+                        resolve({
+                            message: 'You don\'t like this product',
+                            code: 0
+                        })
+                    } else {
+                        await db.UserProduct.destroy({
+                            where: { id: req.body.id }
+                        })
+                        resolve({
+                            message: 'Successfully unlike this product',
+                            code: 1
+                        })
+                    }
+                }
+
+
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     getProduct,
     createProduct,
@@ -464,5 +710,10 @@ module.exports = {
     updateProduct,
     getProductComment,
     getProductShop,
-    createProductComment
+    createProductComment,
+    deleteProductComment,
+    updateProductComment,
+    likeProduct,
+    unlikeProduct,
+    getProductOfShop,
 }

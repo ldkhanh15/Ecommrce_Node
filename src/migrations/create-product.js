@@ -22,10 +22,6 @@ module.exports = {
             hoverImage: {
                 type: Sequelize.STRING
             },
-            avgStar: {
-                type: Sequelize.FLOAT,
-                defaultValue: 0.0
-            },
             sale: {
                 type: Sequelize.FLOAT,
                 defaultValue: 0
@@ -58,5 +54,6 @@ module.exports = {
     },
     async down(queryInterface, Sequelize) {
         await queryInterface.dropTable('Products');
+        
     }
 };

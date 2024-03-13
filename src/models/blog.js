@@ -11,9 +11,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Blog.hasMany(models.BlogComment, { foreignKey: 'idBlog', as: 'blog_comment' })
+      Blog.hasMany(models.BlogComment, { foreignKey: 'idBlog', as: 'comment' })
       Blog.hasMany(models.Tag, { foreignKey: 'idBlog', as: 'tag' })
-      Blog.hasOne(models.BlogDetail, { foreignKey: 'idBlog', as: 'blog_detail' })
+      Blog.hasOne(models.BlogDetail, { foreignKey: 'idBlog', as: 'detail' })
 
       Blog.belongsTo(models.User, { foreignKey: 'idAuthor', as: 'author' })
     }

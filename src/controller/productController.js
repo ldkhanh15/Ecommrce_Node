@@ -8,6 +8,14 @@ const getProduct = async (req, res) => {
         console.log(error);
     }
 }
+const getProductOfShop = async (req, res) => {
+    try {
+        let data = await productService.getProductOfShop(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 const getProductShop = async (req, res) => {
     try {
         let data = await productService.getProductShop(req);
@@ -40,6 +48,22 @@ const createProductComment = async (req, res) => {
         console.log(error);
     }
 }
+const deleteProductComment = async (req, res) => {
+    try {
+        let data = await productService.deleteProductComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+const updateProductComment = async (req, res) => {
+    try {
+        let data = await productService.updateProductComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 const deleteProduct = async (req, res) => {
     try {
         let data = await productService.deleteProduct(req);
@@ -56,6 +80,22 @@ const updateProduct = async (req, res) => {
         console.log(error);
     }
 }
+const likeProduct = async (req, res) => {
+    try {
+        let data = await productService.likeProduct(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+const unlikeProduct = async (req, res) => {
+    try {
+        let data = await productService.unlikeProduct(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 module.exports = {
     getProduct,
     createProduct,
@@ -63,5 +103,10 @@ module.exports = {
     updateProduct,
     getProductShop,
     getProductComment,
-    createProductComment
+    createProductComment,
+    deleteProductComment,
+    updateProductComment,
+    likeProduct,
+    unlikeProduct,
+    getProductOfShop,
 }

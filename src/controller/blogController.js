@@ -9,6 +9,14 @@ const getBlog = async (req, res) => {
         console.log(error);
     }
 }
+const getBlogDetail = async (req, res) => {
+    try {
+        let data = await blogService.getBlogDetail(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 const createBlog = async (req, res) => {
     try {
@@ -37,9 +45,50 @@ const updateBlog = async (req, res) => {
     }
 }
 
+const getComment = async (req, res) => {
+    try {
+        let data = await blogService.getComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const createComment = async (req, res) => {
+    try {
+        let data = await blogService.createComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const deleteComment = async (req, res) => {
+    try {
+        let data = await blogService.deleteComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const updateComment = async (req, res) => {
+    try {
+        let data = await blogService.updateComment(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getBlog,
     createBlog,
     deleteBlog,
-    updateBlog
+    updateBlog,
+    getBlogDetail,
+    getComment,
+    deleteComment,
+    updateComment,
+    createComment,
 }

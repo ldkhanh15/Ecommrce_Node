@@ -53,7 +53,6 @@ module.exports = (sequelize, DataTypes) => {
     price: DataTypes.FLOAT,
     mainImage: DataTypes.STRING,
     hoverImage: DataTypes.STRING,
-    avgStar: DataTypes.FLOAT,
     sale: DataTypes.FLOAT,
     idShop: DataTypes.STRING,
     sold: DataTypes.INTEGER,

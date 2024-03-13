@@ -9,6 +9,15 @@ const getVoucher = async (req, res) => {
     }
 }
 
+const getVoucherOfShop = async (req, res) => {
+    try {
+        const data = await voucherService.getVoucherOfShop(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const createVoucher = async (req, res) => {
     try {
         const data = await voucherService.createVoucher(req);
@@ -40,4 +49,5 @@ module.exports = {
     createVoucher,
     deleteVoucher,
     updateVoucher,
+    getVoucherOfShop, 
 }

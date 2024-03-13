@@ -13,8 +13,8 @@ export const gender = joi.string();
 export const phone = joi.string();
 export const bank = joi.string();
 export const introduce = joi.string();
-export const address = joi.string();
-
+export const address = joi.string().required();
+export const idUser = joi.string().required();
 export const image = joi.string().required();
 export const fileName = joi.string().required();
 //BANNER
@@ -41,6 +41,7 @@ export const idStatus = joi.string().required();
 export const idShop = joi.string().required();
 export const totalPrice = joi.number().required();
 export const products = joi.array().required();
+export const status = joi.string().required();
 
 //VOUCHER
 export const voucherCode = joi.string().required();
@@ -56,7 +57,7 @@ export const field = joi.string().required();
 export const idAuthor = joi.string().required();
 export const comment = joi.string().required();
 export const content = joi.string().required();
-
+export const idBlog = joi.string().required();
 //SIZE
 export const nameSize = joi.string().required();
 

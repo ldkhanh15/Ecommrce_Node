@@ -1,20 +1,46 @@
 import db from '../models/index'
 import joi from 'joi'
-import { id, idAuthor, name, field, comment, content } from '../helpers/joi_schema'
+import { idBlog, id, idAuthor, name, field, comment, content, star, idParent } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 const getBlog = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Blog.findAll({
-                where: req.body?.id ? { id: req.body.id } : {}
+            let data = await db.Blog.findAll();
+
+            resolve({
+                data,
+                message: 'Successfully',
+                code: 1
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getBlogDetail = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data = await db.Blog.findOne({
+                where: { id: req.query.id },
+                include: [
+                    {
+                        model: db.BlogDetail, as: 'detail', attributes: ['content', 'comment']
+                    },
+                    {
+                        model: db.BlogComment, as: 'comment', attributes: ['idParent', 'comment', 'star', 'createdAt'],
+                        include: [
+                            {
+                                model: db.User, as: 'user', attributes: ['name', 'avatar', 'username']
+                            }
+                        ]
+                    },
+                    {
+                        model: db.Tag, as: 'tag', attributes: ['name']
+                    }
+                ]
             });
-            if (req.body.id) {
-                await db.Blog.update({
-                    view: data[0].view + 1
-                }, {
-                    where: { id: req.body.id }
-                })
-            }
+            data.increment('view');
+
             resolve({
                 data,
                 message: 'Successfully',
@@ -158,9 +184,174 @@ const updateBlog = (req) => {
     })
 }
 
+//COMMENT
+const getComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.query);
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let data = await db.Blog.findOne({
+                    where: {
+                        id: req.query.id
+                    },
+                    include: [
+                        {
+                            model: db.BlogComment, as: 'comment', attributes: ['idParent', 'comment', 'star'],
+                            include: [
+                                {
+                                    model: db.User, as: 'user', attributes: ['avatar', 'name']
+                                }
+                            ]
+                        }
+                    ]
+                })
+                resolve({
+                    message: 'Successfully get comment',
+                    code: 1,
+                    data
+                })
+            }
+            resolve({
+                data,
+                message: 'Successfully',
+                code: 1
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const createComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ idBlog, idAuthor, comment, idParent, star }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let comment = await db.BlogComment.create({
+                    ...req.body
+                });
+                await comment.save();
+                resolve({
+                    code: 1,
+                    message: 'Comment created successfully'
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const deleteComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, idBlog, }).validate(req.query)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let comment = await db.BlogComment.findOne({
+                    where: {
+                        idBlog: req.query.idBlog,
+                        id: req.query.id
+                    }
+                })
+                if (!comment) {
+                    resolve({
+                        message: 'comment not found',
+                        code: 0
+                    })
+                } else {
+                    if (req.user.role !== "R1" && req.body.idAuthor !== String(req.user.id) || req.body.idAuthor !== comment.idAuthor) {
+                        resolve({
+                            message: 'You cannot delete this comment',
+                            code: 0
+                        })
+                    }
+                    await db.BlogComment.destroy({
+                        where: {
+                            idBlog: req.query.idBlog,
+                            id: req.query.id
+                        }
+                    })
+                    resolve({
+                        code: 1,
+                        message: 'Comment deleted successfully'
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const updateComment = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id, idBlog, idAuthor, comment, star }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let comment = await db.BlogComment.findOne({
+                    where: {
+                        idBlog: req.body.idBlog,
+                        id: req.body.id
+                    }
+                })
+                if (!comment) {
+                    resolve({
+                        message: 'comment not found',
+                        code: 0
+                    })
+                } else {
+
+                    if (req.user.role !== "R1" && req.body.idAuthor !== String(req.user.id) || req.body.idAuthor !== comment.idAuthor) {
+                        resolve({
+                            message: 'You cannot update this comment',
+                            code: 0
+                        })
+                    }
+                    await db.BlogComment.update(req.body, {
+                        where: {
+                            id: req.body.id
+                        }
+                    })
+                    resolve({
+                        code: 1,
+                        message: 'Comment updated successfully'
+                    })
+                }
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 module.exports = {
     getBlog,
     createBlog,
     deleteBlog,
     updateBlog,
+    getBlogDetail,
+    getComment,
+    createComment,
+    deleteComment,
+    updateComment
+
 }

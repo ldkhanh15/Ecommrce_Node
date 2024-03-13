@@ -17,10 +17,11 @@ cloudinary.api.usage(function (error, result) {
 });
 const storageImage = new CloudinaryStorage({
   cloudinary,
-  allowedFormats: ['jpg', 'png'],
+  allowedFormats: ['jpg', 'png','jpeg','gif'],
   params: {
     folder: "e_commerce"
   },
+  
 });
 const storageVideo = new CloudinaryStorage({
   cloudinary,
