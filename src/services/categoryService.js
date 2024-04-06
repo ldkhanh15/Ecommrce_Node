@@ -33,6 +33,75 @@ const getCate = (req) => {
         }
     })
 }
+
+const getAllCate = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data = await db.Cate.findAll({
+                attributes: { exclude: ['fileName'] },
+            });
+            resolve({
+                data,
+                message: 'Successfully',
+                code: 1
+            })
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const uploadImage = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.body);
+            if (error.error) {
+                if(req.file){
+                    await cloudinary.uploader.destroy(req?.file?.filename)
+                }
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let cate = await db.Cate.findOne({
+                    where: { id: req.body.id }
+                })
+                if (!cate) {
+                    if(req.file){
+                        await cloudinary.uploader.destroy(req?.file?.filename)
+                    }
+                    resolve({
+                        code: 0,
+                        message: 'Cate not found'
+                    })
+                } else {
+                    if (cate.fileName) {
+                        await cloudinary.uploader.destroy(cate.fileName)
+                    }
+                    await db.Cate.update({
+                        fileName: req?.file?.filename,
+                        image: req?.file?.path
+                    }, {
+                        where: { id: req.body.id }
+                    })
+                    resolve({
+                        message: 'Uploading image successfully',
+                        code: 1,
+                        image: req?.file?.path
+                    })
+                }
+            }
+
+        } catch (error) {
+            if(req.file){
+                await cloudinary.uploader.destroy(req?.file?.filename)
+            }
+            reject(error)
+        }
+    })
+}
 const createCate = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -45,7 +114,7 @@ const createCate = (req) => {
                     code: 0
                 })
             }
-            const error = joi.object({ name, quantity, featured }).validate(req.body)
+            const error = joi.object({ name, featured }).validate(req.body)
             if (error.error) {
                 await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
@@ -57,6 +126,7 @@ const createCate = (req) => {
                     image,
                     fileName,
                     featured: req.body.featured === "true" ? true : false,
+                    quantity:0,
                     ...req.body
                 })
                 await cate.save();
@@ -74,7 +144,7 @@ const createCate = (req) => {
 const deleteCate = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate(req.body)
+            const error = joi.object({ id }).validate(req.query)
             if (error.error) {
                 resolve({
                     message: error.error?.details[0]?.message,
@@ -82,7 +152,7 @@ const deleteCate = (req) => {
                 })
             } else {
                 let cate = await db.Cate.findOne({
-                    where: { id: req.body.id }
+                    where: { id: req.query.id }
                 })
                 if (!cate) {
                     resolve({
@@ -94,7 +164,7 @@ const deleteCate = (req) => {
                     await cloudinary.uploader.destroy(cate.fileName)
                 }
                 await db.Cate.destroy({
-                    where: { id: req.body.id }
+                    where: { id: req.query.id }
                 })
 
                 resolve({
@@ -110,18 +180,8 @@ const deleteCate = (req) => {
 const updateCate = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let image = req?.file?.path
-            let fileName = req?.file?.filename
-            if (!fileName || !image) {
-                await cloudinary.uploader.destroy(req?.file?.filename)
-                resolve({
-                    message: 'Image is required',
-                    code: 0
-                })
-            }
             const error = joi.object({ id, name, quantity, featured }).validate(req.body)
             if (error.error) {
-                await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
                     message: error.error?.details[0]?.message,
                     code: 0
@@ -131,20 +191,15 @@ const updateCate = (req) => {
                     where: { id: req.body.id }
                 })
                 if (!cate) {
-                    await cloudinary.uploader.destroy(req?.file?.filename)
                     resolve({
                         message: 'ID category not found',
                         code: 0
                     })
                 } else {
-                    if (cate.fileName) {
-                        await cloudinary.uploader.destroy(cate.fileName)
-                    }
+
                     await db.Cate.update({
                         ...req.body,
                         featured: req.body.featured === "true" ? true : false,
-                        fileName,
-                        image
                     }, {
                         where: { id: req.body?.id }
                     })
@@ -155,7 +210,6 @@ const updateCate = (req) => {
                 }
             }
         } catch (error) {
-            await cloudinary.uploader.destroy(req?.file?.filename)
             reject(error)
         }
     })
@@ -165,4 +219,6 @@ module.exports = {
     deleteCate,
     createCate,
     updateCate,
+    getAllCate,
+    uploadImage,
 }

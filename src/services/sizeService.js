@@ -44,7 +44,7 @@ const createSize = (req) => {
 const deleteSize = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate(req.body)
+            const error = joi.object({ id }).validate(req.query)
             if (error.error) {
                 resolve({
                     code: 0,
@@ -52,7 +52,7 @@ const deleteSize = (req) => {
                 })
             } else {
                 await db.Size.destroy({
-                    where: { id: req.body.id }
+                    where: { id: req.query.id }
                 })
                 resolve({
                     message: 'Successfully delete size',

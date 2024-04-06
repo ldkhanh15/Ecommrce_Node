@@ -9,6 +9,24 @@ const getCate = async (req, res) => {
     }
 }
 
+const getAllCate = async (req, res) => {
+    try {
+        let data = await categoryService.getAllCate(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const uploadImage = async (req, res) => {
+    try {
+        let data = await categoryService.uploadImage(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const createCate = async (req, res) => {
     try {
         let data = await categoryService.createCate(req);
@@ -41,4 +59,6 @@ module.exports ={
     createCate,
     deleteCate,
     updateCate,
+    getAllCate,
+    uploadImage
 }

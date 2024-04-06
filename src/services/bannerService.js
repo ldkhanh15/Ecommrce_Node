@@ -5,7 +5,6 @@ import { id, start, end, title, subTitle, main } from '../helpers/joi_schema'
 const getBanner = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log('main',req.query);
             const error = joi.object({ main }).validate(req.query);
             if (error.error) {
                 resolve({
@@ -15,8 +14,8 @@ const getBanner = (req) => {
             } else {
                 let data = await db.Banner.findAll({
                     attributes: { exclude: ['fileName'] },
-                    where:{
-                        main: req.query.main ==="true" ? true : false
+                    where: {
+                        main: req.query.main === "true" ? true : false
                     }
                 });
                 resolve({
@@ -26,6 +25,75 @@ const getBanner = (req) => {
                 })
             }
         } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getAllBanner = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data = await db.Banner.findAll({
+                attributes: { exclude: ['fileName'] },
+            });
+            resolve({
+                data,
+                message: 'Successfully',
+                code: 1
+            })
+
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const uploadImage = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.body);
+            if (error.error) {
+                if(req.file){
+                    await cloudinary.uploader.destroy(req?.file?.filename)
+                }
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let banner = await db.Banner.findOne({
+                    where: { id: req.body.id }
+                })
+                console.log(banner);
+                if (!banner) {
+                    if(req.file){
+                        await cloudinary.uploader.destroy(req?.file?.filename)
+                    }
+                    resolve({
+                        code: 0,
+                        message: 'Banner not found'
+                    })
+                } else {
+                    if (banner.fileName) {
+                        await cloudinary.uploader.destroy(banner.fileName)
+                    }
+                    await db.Banner.update({
+                        fileName: req?.file?.filename,
+                        image: req?.file?.path
+                    }, {
+                        where: { id: req.body.id }
+                    })
+                    resolve({
+                        message: 'Uploading image successfully',
+                        code: 1,
+                        image: req?.file?.path
+                    })
+                }
+            }
+
+        } catch (error) {
+            if(req.file){
+                await cloudinary.uploader.destroy(req?.file?.filename)
+            }
             reject(error)
         }
     })
@@ -69,11 +137,10 @@ const createBanner = (req) => {
     })
 }
 
-const deleteBanner = (data) => {
+const deleteBanner = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate(data)
-            console.log(error);
+            const error = joi.object({ id }).validate(req.query)
             if (error.error) {
 
                 resolve({
@@ -81,7 +148,7 @@ const deleteBanner = (data) => {
                     code: 0
                 })
             } else {
-                let banner = await db.Banner.findOne({ where: { id: data.id } })
+                let banner = await db.Banner.findOne({ where: { id: req.query.id } })
                 if (!banner) {
                     resolve({
                         message: 'ID Banner not found',
@@ -91,7 +158,7 @@ const deleteBanner = (data) => {
                 if (banner.fileName) {
                     await cloudinary.uploader.destroy(banner.fileName)
                 }
-                await db.Banner.destroy({ where: { id: data.id } })
+                await db.Banner.destroy({ where: { id: req.query.id } })
                 resolve({
                     message: 'Successfully',
                     code: 1
@@ -106,30 +173,24 @@ const deleteBanner = (data) => {
 const updateBanner = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let fileName = req.file?.filename;
-            let image = req.file?.path;
-            const error = joi.object({ id, start, end, title, subTitle, main}).validate(req.body);
+
+            const error = joi.object({ id, start, end, title, subTitle, main }).validate(req.body);
             if (error.error) {
-                await cloudinary.uploader.destroy(req.file?.filename);
                 resolve({
                     message: error.error?.details[0]?.message,
                     code: 0
                 })
             } else {
 
-                let banner = await db.Banner.findOne({ where: { id: id } })
+                let banner = await db.Banner.findOne({ where: { id: req.body.id } })
                 if (!banner) {
-                    await cloudinary.uploader.destroy(req.file?.filename)
                     resolve({
                         message: 'ID Banner not found',
                         code: 0
                     })
                 }
-                if (banner.fileName) {
-                    await cloudinary.uploader.destroy(banner.fileName)
-                }
                 await db.Banner.update({ ...req.body }, {
-                    where: { id: id }
+                    where: { id: req.body.id }
                 })
                 resolve({
                     message: 'Update banner successfully',
@@ -137,14 +198,15 @@ const updateBanner = (req) => {
                 })
             }
         } catch (error) {
-            await cloudinary.uploader.destroy(req.file?.filename)
             reject(error)
         }
     })
 }
 module.exports = {
     getBanner,
+    getAllBanner,
     createBanner,
     deleteBanner,
     updateBanner,
+    uploadImage
 }

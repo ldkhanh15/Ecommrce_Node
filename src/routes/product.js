@@ -15,8 +15,8 @@ router.delete('/delete-comment', productController.deleteProductComment)
 router.put('/update-comment', productController.updateProductComment)
 router.use(authController.isSeller);
 router.get('/get-product-shop', productController.getProductOfShop)
-router.post('/create', cloudinary.uploadImage.array('image'), productController.createProduct)
+router.post('/create', cloudinary.uploadImage.array('images'), productController.createProduct)
 router.delete('/delete', productController.deleteProduct)
-router.put('/update', cloudinary.uploadImage.array('image'), productController.updateProduct)
+router.put('/update', cloudinary.uploadImage.array('images'), productController.updateProduct)
 
 module.exports = router

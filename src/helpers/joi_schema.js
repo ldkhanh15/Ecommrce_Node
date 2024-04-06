@@ -23,7 +23,7 @@ export const end = joi.string().required();
 export const description = joi.string().required();
 export const title = joi.string().required();
 export const subTitle = joi.string();
-export const main = joi.string().required();
+export const main = joi.boolean().required();
 //PAYMENT
 export const payment = joi.string().required();
 //CART
@@ -44,7 +44,7 @@ export const products = joi.array().required();
 export const status = joi.string().required();
 
 //VOUCHER
-export const voucherCode = joi.string().required();
+export const maVoucher = joi.string().required();
 export const remain = joi.number();
 export const salePT = joi.number();
 export const salePrice = joi.number();
@@ -57,7 +57,9 @@ export const field = joi.string().required();
 export const idAuthor = joi.string().required();
 export const comment = joi.string().required();
 export const content = joi.string().required();
+export const contentHTML = joi.string().required();
 export const idBlog = joi.string().required();
+export const tag = joi.array().required();
 //SIZE
 export const nameSize = joi.string().required();
 
@@ -76,3 +78,6 @@ export const combo = joi.array();
 export const star = joi.string().required();
 export const idBill = joi.string().required();
 export const idParent = joi.string();
+
+//Deliver
+export const nameDeliver = joi.string().required();

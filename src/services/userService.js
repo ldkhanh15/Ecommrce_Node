@@ -10,28 +10,42 @@ const getUser = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             if (req.user.role !== 'R1') {
-                if (req.query.id !== String(req.user.id)) {
+                if (req.query.id) {
+                    if (req.query.id !== String(req.user.id)) {
+                        resolve({
+                            message: 'You are not allowed to get information another user',
+                            code: 0
+                        })
+                    }
+                    let data = await db.User.findOne({
+                        where: { id: req.query.id },
+                        attributes: {
+                            exclude: ['password']
+                        }
+                    });
                     resolve({
-                        message: 'You are not allowed to get information another user',
-                        code: 0
+                        data,
+                        code: 1,
+                        message: 'Successfully'
+                    })
+                } else {
+                    let data = await db.User.findOne({
+                        where: { id: req.user.id },
+                        attributes: {
+                            exclude: ['password']
+                        }
+                    });
+                    resolve({
+                        data,
+                        code: 1,
+                        message: 'Successfully'
                     })
                 }
-                let data = await db.User.findOne({
-                    where: { id: req.query.id },
-                    attributes: {
-                        exclude: ['password']
-                    }
-                });
-                resolve({
-                    data,
-                    code: 1,
-                    message: 'Successfully'
-                })
             }
             let data;
             if (req.query.id) {
                 data = await db.User.findOne({
-                    where:{id: req.query.id},
+                    where: { id: req.query.id },
                     attributes: {
                         exclude: ['password']
                     }
@@ -265,27 +279,40 @@ const createAddress = (req) => {
                             message: 'You cannot create address for another user',
                             code: 0
                         })
+                    } else {
+                        let address = await db.AddressUser.create({
+                            address: req.body.address,
+                            idUser: req.user.id
+                        })
+                        await address.save();
+                        resolve({
+                            message: 'Address created successfully',
+                            code:1,
+
+                        })
                     }
-                }
-                let user = await db.User.findOne({
-                    where: {
-                        id: req.body.idUser
-                    }
-                })
-                if (!user) {
-                    resolve({
-                        message: 'Id user not found',
-                        code: 0
-                    })
                 } else {
-                    let address = await db.AddressUser.create({
-                        ...req.body
+
+                    let user = await db.User.findOne({
+                        where: {
+                            id: req.body.idUser
+                        }
                     })
-                    await address.save();
-                    resolve({
-                        message: 'Address created successfully',
-                        code: 1
-                    })
+                    if (!user) {
+                        resolve({
+                            message: 'Id user not found',
+                            code: 0
+                        })
+                    } else {
+                        let address = await db.AddressUser.create({
+                            ...req.body
+                        })
+                        await address.save();
+                        resolve({
+                            message: 'Address created successfully',
+                            code: 1
+                        })
+                    }
                 }
             }
         } catch (error) {
@@ -353,7 +380,6 @@ const deleteAddress = (req) => {
                     code: 0
                 })
             } else {
-
                 if (req.user.role !== 'R1') {
                     let id = req.user.id
                     if (req.query.idUser !== String(id)) {
@@ -365,7 +391,7 @@ const deleteAddress = (req) => {
                 }
                 let address = await db.AddressUser.findOne({
                     where: {
-                        id: req.query.idUser,
+                        id: req.query.id,
                         idUser: req.query.idUser
                     }
                 })
@@ -377,7 +403,7 @@ const deleteAddress = (req) => {
                 } else {
                     await db.AddressUser.destroy({
                         where: {
-                            id: req.query.idUser,
+                            id: req.query.id,
                             idUser: req.query.idUser
                         }
                     })

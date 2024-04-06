@@ -1,4 +1,6 @@
 import db from '../models'
+import joi from 'joi'
+import { id,nameDeliver, price } from '../helpers/joi_schema'
 const getDeliver = () => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -16,19 +18,32 @@ const getDeliver = () => {
 const createDeliver = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { name, price } = data;
-            if (name && price) {
+            const error = joi.object({ nameDeliver, price }).validate({ price: data.price, nameDeliver: data.name })
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                const exist = await db.Deliver.findOne({
+                    where: {
+                        name: data.name
+                    }
+                })
+                if (exist) {
+                    resolve({
+                        message: 'Deliver existed',
+                        code: 0
+                    })
+                }
                 const deliver = await db.Deliver.create(data)
                 await deliver.save();
                 resolve({
                     message: 'Successfully',
                     code: 1,
                 })
+
             }
-            resolve({
-                message: 'Missing name deliver or price!',
-                code: 0
-            })
         } catch (error) {
             reject(error)
         }
@@ -37,20 +52,32 @@ const createDeliver = (data) => {
 const deleteDeliver = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { id } = data;
-            if (id) {
-                await db.Deliver.destroy({
-                    where: { id }
-                })
+
+            const error = joi.object({ id }).validate(data)
+            if (error.error) {
                 resolve({
-                    message: 'Successfully',
-                    code: 1,
+                    message: error.error?.details[0].message,
+                    code: 0
                 })
+            } else {
+                let deliver = await db.Deliver.findOne({
+                    where: { id: data.id }
+                })
+                if (!deliver) {
+                    resolve({
+                        code: 0,
+                        message: 'Deliver not found',
+                    })
+                } else {
+                    await db.Deliver.destroy({
+                        where: { id: data.id }
+                    })
+                    resolve({
+                        message: 'Deliver deleted',
+                        code: 1
+                    })
+                }
             }
-            resolve({
-                message: 'Missing id Deliver!',
-                code: 0
-            })
         } catch (error) {
             reject(error)
         }
@@ -59,20 +86,35 @@ const deleteDeliver = (data) => {
 const updateDeliver = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const { id, name, price } = data;
-            if (id && name && price) {
-                await db.Deliver.update({ name: name }, {
-                    where: { id }
-                })
+            const error = joi.object({ nameDeliver, price, id }).validate({ price: data.price, nameDeliver: data.name, id: data.id })
+            if (error.error) {
                 resolve({
-                    message: 'Successfully',
-                    code: 1,
+                    message: error.error?.details[0].message,
+                    code: 0
                 })
+            } else {
+                const exist = await db.Deliver.findOne({
+                    where: {
+                        id: data.id,
+                    }
+                })
+                if (!exist) {
+                    resolve({
+                        message: 'Deliver not found',
+                        code: 0
+                    })
+                } else {
+                    await db.Deliver.update({
+                        where: { id: data.id }
+                    }, {
+                        ...data
+                    })
+                    resolve({
+                        message: 'Deliver updated',
+                        code: 1
+                    })
+                }
             }
-            resolve({
-                message: 'Missing id Deliver or name Deliver or price!',
-                code: 0
-            })
         } catch (error) {
             reject(error)
         }

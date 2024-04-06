@@ -17,7 +17,10 @@ module.exports = {
         //author
       },
       content:{
-        type: Sequelize.STRING
+        type: Sequelize.TEXT
+      },
+      contentHTML:{
+        type: Sequelize.TEXT
       },
       createdAt: {
         allowNull: false,
@@ -28,6 +31,13 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+    return [
+      queryInterface.addColumn(
+        'BlogDetails',
+        'contentHTML',
+        Sequelize.TEXT
+      )
+    ]
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('BlogDetails');

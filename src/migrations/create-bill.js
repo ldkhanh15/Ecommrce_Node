@@ -10,7 +10,12 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             totalPrice: {
-                type: Sequelize.INTEGER
+                type: Sequelize.INTEGER,
+                defaultValue: 0
+            },
+            discountPrice: {
+                type: Sequelize.INTEGER,
+                defaultValue:0
             },
             idShop: {
                 type: Sequelize.STRING,
@@ -39,6 +44,14 @@ module.exports = {
                 type: Sequelize.DATE
             }
         });
+        return [
+            queryInterface.changeColumn('Bills','totalPrice',{
+                type:Sequelize.FLOAT
+            }),
+            queryInterface.changeColumn('Bills','discountPrice',{
+                type:Sequelize.FLOAT
+            }),
+        ]
     },
     async down(queryInterface, Sequelize) {
         await queryInterface.dropTable('Bills');

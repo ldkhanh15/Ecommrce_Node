@@ -14,6 +14,9 @@ const getCart = (req) => {
                         include:[
                             {
                                 model:db.ProductReview,as:'review',attributes:['star']
+                            },
+                            {
+                                model:db.Shop ,as: 'shop', attributes:['id','name']
                             }
                         ]
                     }

@@ -8,6 +8,15 @@ const getVendor = async (req, res) => {
         console.log(error);
     }
 }
+
+const getVendorAll = async (req, res) => {
+    try {
+        let data=await vendorService.getVendorAll(req);
+        res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 const getDeliver = async (req, res) => {
     try {
         let data=await vendorService.getDeliver(req);
@@ -67,6 +76,7 @@ const delDeliver = async (req, res) => {
 
 module.exports ={
     getVendor,
+    getVendorAll,
     createVendor,
     deleteVendor,
     updateVendor,

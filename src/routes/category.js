@@ -8,8 +8,11 @@ router.get('/', categoryController.getCate);
 //PRIVATE ROUTES
 router.use(authController.verifyToken);
 router.use(authController.isAdmin);
+router.get('/all',categoryController.getAllCate)
+router.post('/upload',cloudinary.uploadImage.single('image'),categoryController.uploadImage)
+
 router.post('/create', cloudinary.uploadImage.single('image'), categoryController.createCate);
 router.delete('/delete', categoryController.deleteCate);
-router.put('/update', cloudinary.uploadImage.single('image'), categoryController.updateCate);
+router.put('/update', categoryController.updateCate);
 
 module.exports = router

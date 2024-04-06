@@ -1,19 +1,19 @@
 import db from '../models/index'
 import joi from 'joi'
-import { id, remain, quantity, limit, description, minBill, voucherCode, start, end, type, salePT, salePrice } from '../helpers/joi_schema'
+import { id, remain, quantity, limit, description, minBill, maVoucher, start, end, type, salePT, salePrice } from '../helpers/joi_schema'
 
 
 const getVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if(req.query.id){
-                let data=await db.Voucher.findOne({
-                    where:{
-                        id:req.query.id
+            if (req.query.id) {
+                let data = await db.Voucher.findOne({
+                    where: {
+                        id: req.query.id
                     },
-                    include:[
+                    include: [
                         {
-                            model:db.Shop,as:'shop',attributes:['name','avatar']
+                            model: db.Shop, as: 'shop', attributes: ['name', 'avatar','id']
                         }
                     ]
                 })
@@ -74,7 +74,7 @@ const getVoucherOfShop = (req) => {
 const createVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ voucherCode, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
+            const error = joi.object({ maVoucher, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
                 .validate(req.body)
             if (error.error) {
                 resolve({
@@ -84,7 +84,6 @@ const createVoucher = (req) => {
             } else {
                 let voucher = await db.Voucher.create({
                     ...req.body,
-                    maVoucher: req.body.voucherCode,
                     remain: 0
                 })
                 await voucher.save()
@@ -138,7 +137,7 @@ const deleteVoucher = (req) => {
 const updateVoucher = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, voucherCode, remain, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
+            const error = joi.object({ id, maVoucher, remain, description, end, start, quantity, limit, minBill, salePT, salePrice, type })
                 .validate(req.body)
             if (error.error) {
                 resolve({

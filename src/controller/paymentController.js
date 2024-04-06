@@ -2,7 +2,7 @@ import paymentService from '../services/paymentService'
 
 const getPayment=async(req,res)=>{
     try {
-        const data=await paymentService.getPayment(req.body);
+        const data=await paymentService.getPayment(req.query);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);
@@ -20,7 +20,7 @@ const createPayment=async(req,res)=>{
 
 const deletePayment=async(req,res)=>{
     try {
-        const data=await paymentService.deletePayment(req.body);
+        const data=await paymentService.deletePayment(req.query);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);

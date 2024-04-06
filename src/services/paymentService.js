@@ -5,10 +5,7 @@ import { id, payment } from '../helpers/joi_schema'
 const getPayment = (data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let id = data?.id
-            let data = await db.Payment.findAll({
-                where: id ? { id } : {}
-            })
+            let data = await db.Payment.findAll()
             resolve({
                 data,
                 message: 'Successfully',

@@ -6,6 +6,7 @@ import cloudinary from 'cloudinary'
 const getProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
+            console.log(req.query.id);
             let data = !req.query.id ?
                 await db.Product.findAll({
                     include: [
@@ -81,7 +82,7 @@ const getProductOfShop = (req) => {
                         model: db.ProductDetail, as: 'detailProduct', attributes: ['quantity']
                     },
                     {
-                        model:db.Shop,as:'shop',attributes:['name']
+                        model: db.Shop, as: 'shop', attributes: ['name']
                     }
                 ]
             })
@@ -364,6 +365,7 @@ const createProduct = (req) => {
                 cate.increment("quantity")
                 let product = await db.Product.create({
                     ...req.body,
+                    idShop: req.user.id,
                     sold: 0,
                     name: req.body.nameProduct,
                     mainImage: req.files[0].path,
@@ -380,7 +382,9 @@ const createProduct = (req) => {
                 }))
 
                 let productDetail = await db.ProductDetail.create({
-                    ...req.body,
+                    additional: req.body.additional,
+                    description: req.body.description,
+                    quantity: req.body.quantity,
                     idProduct: product.id
                 })
                 await productDetail.save()
@@ -423,7 +427,9 @@ const createProduct = (req) => {
 const updateProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity }).validate(req.body)
+            console.log(req.body);
+            console.log(req.files);
+            const error = joi.object({ id, brand, color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity }).validate(req.body)
             if (error.error) {
                 Promise.all(req.files?.map(async (file) => {
                     await cloudinary.uploader.destroy(file.filename)
@@ -463,9 +469,13 @@ const updateProduct = (req) => {
                             idProduct: req.body.id
                         }
                     })
-                    await db.ProductDetail.destroy({
+                    await db.ProductDetail.update({
+                        additional: req.body.additional,
+                        description: req.body.description,
+                        quantity: req.body.quantity,
+                    }, {
                         where: {
-                            idProduct: req.body.id
+                            idProduct: product.id
                         }
                     })
                     await db.ProductSize.destroy({
@@ -488,8 +498,8 @@ const updateProduct = (req) => {
                         ...req.body,
                         sold: 0,
                         name: req.body.nameProduct,
-                        mainImage: req.files[0].path,
-                        hoverImage: req.files[1].path,
+                        mainImage: req?.files[0]?.path,
+                        hoverImage: req?.files[1]?.path || req?.files[0]?.path,
                     }, {
                         where: {
                             id: req.body.id
@@ -504,11 +514,6 @@ const updateProduct = (req) => {
                         await image.save();
                     }))
 
-                    let productDetail = await db.ProductDetail.create({
-                        ...req.body,
-                        idProduct: product.id
-                    })
-                    await productDetail.save()
                     req.body.size && Promise.all(req.body.size.map(async (item) => {
                         let sizeItem = await db.ProductSize.create({
                             idProduct: product.id,
@@ -550,7 +555,7 @@ const updateProduct = (req) => {
 const deleteProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate(req.body)
+            const error = joi.object({ id }).validate(req.query)
             if (error.error) {
                 resolve({
                     code: 0,
@@ -558,7 +563,7 @@ const deleteProduct = (req) => {
                 })
             } else {
                 let product = await db.Product.findOne({
-                    where: { id: req.body.id }
+                    where: { id: req.query.id }
                 })
                 if (!product) {
                     resolve({
@@ -567,43 +572,43 @@ const deleteProduct = (req) => {
                     })
                 } else {
                     let images = await db.ProductImage.findAll({
-                        where: { idProduct: req.body.id },
+                        where: { idProduct: req.query.id },
                     })
                     Promise.all(images.map(async (image) => {
                         await cloudinary.uploader.destroy(image.fileName)
                     }))
                     await db.ProductImage.destroy({
-                        where: { idProduct: req.body.id },
+                        where: { idProduct: req.query.id },
                     })
                     await db.ProductDetail.destroy({
-                        where: { idProduct: req.body.id },
+                        where: { idProduct: req.query.id },
                     })
                     await db.Product.destroy({
                         where: {
-                            id: req.body.id
+                            id: req.query.id
                         }
                     })
                     await db.ProductSale.destroy({
                         where: {
-                            id: req.body.id
+                            id: req.query.id
                         }
                     })
                     await db.ProductReview.destroy({
-                        where: { id: req.body.id }
+                        where: { id: req.query.id }
                     })
                     await db.Color.destroy({
                         where: {
-                            idProduct: req.body.id
+                            idProduct: req.query.id
                         }
                     })
                     await db.ProductSize.destroy({
                         where: {
-                            idProduct: req.body.id
+                            idProduct: req.query.id
                         }
                     })
                     await db.Combo.destroy({
                         where: {
-                            idProduct: req.body.id
+                            idProduct: req.query.id
                         }
                     })
 

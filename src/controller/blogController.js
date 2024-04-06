@@ -81,6 +81,15 @@ const updateComment = async (req, res) => {
     }
 }
 
+const uploadImage = async (req, res) => {
+    try {
+        let data = await blogService.uploadImage(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getBlog,
     createBlog,
@@ -91,4 +100,5 @@ module.exports = {
     deleteComment,
     updateComment,
     createComment,
+    uploadImage,
 }

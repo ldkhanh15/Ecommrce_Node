@@ -1,7 +1,9 @@
 import db from '../models/index'
 import joi from 'joi'
+import { Sequelize } from 'sequelize'
 import { idDeliver, idShop, email, password, name, username, phone, bank, introduce, id, address } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
+
 const getVendor = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -13,6 +15,51 @@ const getVendor = (req) => {
                     }
                 ]
             })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const getVendorAll = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data;
+            if(req.query.id) {
+                data = await db.Shop.findOne({
+                    where:{
+                        id: req.query.id
+                    },
+                    include: [
+                        {
+                            model: db.Product, as: 'product', attributes: ['id','name','price','mainImage','hoverImage','sale','brand'],
+                            include:[
+                                {
+                                    model: db.ProductReview, as: 'review', attributes: ['star']
+                                }
+                            ]
+                        },
+                    ],
+                })
+            }else{
+                data = await db.Shop.findAll({
+                    include: [
+                        {
+                            model: db.Product, as: 'product', attributes: ['name','price','mainImage','hoverImage','sale','brand'],
+                            include:[
+                                {
+                                    model: db.ProductReview, as: 'review', attributes: ['star']
+                                }
+                            ]
+                        },
+                    ],
+                })
+            }
             resolve({
                 data,
                 code: 1,
@@ -327,4 +374,5 @@ module.exports = {
     addDeliver,
     delDeliver,
     getDeliver,
+    getVendorAll
 }

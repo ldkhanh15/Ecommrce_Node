@@ -34,7 +34,8 @@ module.exports = (sequelize, DataTypes) => {
     idAddress: DataTypes.STRING,
     idDeliver: DataTypes.STRING,
     idPayment: DataTypes.STRING,
-    totalPrice: DataTypes.INTEGER,
+    totalPrice: DataTypes.FLOAT,
+    discountPrice: DataTypes.FLOAT,
   }, {
     sequelize,
     modelName: 'Bill',

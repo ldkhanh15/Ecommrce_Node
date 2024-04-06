@@ -18,7 +18,7 @@ const getDeliver = async (req, res) => {
 }
 const deleteDeliver = async (req, res) => {
     try {
-        let data = await deliverService.deleteDeliver(req.body);
+        let data = await deliverService.deleteDeliver(req.query);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);

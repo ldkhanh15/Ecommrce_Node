@@ -11,6 +11,7 @@ import banner from './banner'
 import auth from './auth'
 import size from './size'
 import payment from './payment'
+import productSale from './productSale'
 function route(app) {
     app.use('/api/product', product)
     app.use('/api/user', user)
@@ -25,6 +26,7 @@ function route(app) {
     app.use('/api/payment', payment)
     app.use('/api/size', size)
     app.use('/api', auth)
+    app.use('/api/product-sale', productSale)
 }
 
 module.exports = route

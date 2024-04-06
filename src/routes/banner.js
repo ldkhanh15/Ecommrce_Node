@@ -9,8 +9,10 @@ router.get('/', bannerController.getBanner)
 //PRIVATE ROUTES
 router.use(authController.verifyToken)
 router.use(authController.isAdmin)
+router.get('/all', bannerController.getAllBanner)
 router.post('/create', cloudinary.uploadImage.single('image'), bannerController.createBanner);
+router.post('/upload', cloudinary.uploadImage.single('image'), bannerController.uploadImage);
 router.delete('/delete', bannerController.deleteBanner);
-router.put('/update', cloudinary.uploadImage.single('image'), bannerController.updateBanner);
+router.put('/update', bannerController.updateBanner);
 
 module.exports = router

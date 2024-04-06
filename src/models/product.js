@@ -13,6 +13,8 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Product.hasOne(models.ProductDetail, { foreignKey: 'idProduct', as: 'detailProduct' }),
 
+      Product.hasMany(models.ProductSale,{foreignKey:'idProduct', as: 'product'})
+
       Product.hasMany(models.Combo, { foreignKey: 'idProduct', as: 'combo' }),
       Product.hasMany(models.ProductImage, { foreignKey: 'idProduct', as: 'image' }),
       Product.hasMany(models.ProductReview, { foreignKey: 'idProduct', as: 'review' }),

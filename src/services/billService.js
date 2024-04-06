@@ -1,6 +1,6 @@
 import db from '../models'
 import joi from 'joi'
-import { id, idStatus, idBuyer, idShop, idAddress, idDeliver, idPayment, totalPrice, products, status } from '../helpers/joi_schema'
+import { type, id, idStatus, idProduct, idBuyer, idShop, idAddress, idDeliver, idPayment, totalPrice, products, status } from '../helpers/joi_schema'
 const getBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -12,7 +12,7 @@ const getBill = (req) => {
                             model: db.Shop, as: 'shop', attributes: ['name']
                         },
                         {
-                            model:db.StatusBill, as: 'status', attributes: ['status']
+                            model: db.StatusBill, as: 'status', attributes: ['status']
                         }
                     ]
                 })
@@ -27,22 +27,32 @@ const getBill = (req) => {
                             model: db.Shop, as: 'shop', attributes: ['name']
                         },
                         {
-                            model:db.StatusBill, as: 'status', attributes: ['status']
+                            model: db.StatusBill, as: 'status', attributes: ['status']
                         }
                     ]
                 })
             } else if (req.user.role === 'R3') {
-                let { id } = req.user.id;
                 data = await db.Bill.findAll({
                     where: {
-                        idBuyer: id
+                        idBuyer: req.user.id
                     },
                     include: [
                         {
-                            model: db.Shop, as: 'shop', attributes: ['name']
+                            model: db.StatusBill, as: 'status', attributes: ['status']
                         },
                         {
-                            model:db.StatusBill, as: 'status', attributes: ['status']
+                            model:db.AddressUser, as: 'address', attributes:['address']
+                        },
+                        {
+                            model: db.Product, as: 'product', attributes: ['name', 'mainImage', 'price', 'sale'],
+                            include: [
+                                {
+                                    model: db.Shop, as: 'shop', attributes: ['name', 'id']
+                                },
+                                {
+                                    model: db.ProductReview, as: 'review', attributes: ['star']
+                                }
+                            ]
                         }
                     ]
                 })
@@ -61,45 +71,52 @@ const getBill = (req) => {
 const getDetailBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data;
-            if (req.user.role === 'R1') {
-                data = await db.Bill.findAll({
-                    include: [
-                        {
-                            model: db.Product, as: 'product', attributes: ['name', 'price', 'mainImage']
-                        }
-                    ]
+            const error = joi.object({ id }).validate(req.query)
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
                 })
-            } else if (req.user.role === 'R2') {
-                let id = req.user.id;
-                data = await db.Bill.findAll({
+            } else {
+                let data = await db.Bill.findOne({
                     where: {
-                        idShop: id
+                        id: req.query.id,
                     },
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['name', 'price', 'mainImage']
+                            model: db.Shop, as: 'shop', attributes: ['id', 'name', 'avatar', 'phone', 'address']
+                        },
+                        {
+                            model: db.User, as: 'user', attributes: ['name', 'avatar', 'phone']
+                        },
+                        {
+                            model: db.Product, as: 'product', attributes: ['id', 'name', 'price', 'sale', 'mainImage'],
+                            include: [
+                                {
+                                    model: db.ProductReview, as: 'review', attributes: ['star']
+                                }
+                            ]
+                        },
+                        {
+                            model: db.StatusBill, as: 'status', attributes: ['status']
+                        },
+                        {
+                            model: db.AddressUser, as: 'address', attributes: ['address']
+                        },
+                        {
+                            model: db.Payment, as: 'payment', attributes: ['name']
+                        },
+                        {
+                            model: db.Deliver, as: 'deliver', attributes: ['name', 'price']
                         }
                     ]
                 })
-            } else if (req.user.role === 'R3') {
-                let { id } = req.user.id;
-                data = await db.Bill.findAll({
-                    where: {
-                        idBuyer: id
-                    },
-                    include: [
-                        {
-                            model: db.Product, as: 'product', attributes: ['name', 'price', 'mainImage']
-                        }
-                    ]
+                resolve({
+                    message: 'Successfully',
+                    data,
+                    code: 1
                 })
             }
-            resolve({
-                message: 'Successfully',
-                data,
-                code: 1
-            })
         } catch (error) {
             reject(error)
         }
@@ -163,10 +180,79 @@ const createBill = (req) => {
         }
     })
 }
+
+const createBillSale = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({
+                type, idBuyer, idShop, totalPrice, idAddress, idDeliver, idPayment, idProduct
+            }).validate(req.body)
+            if (error.error) {
+                resolve({
+                    code: 0,
+                    message: error.error?.details[0]?.message
+                })
+            } else {
+
+                let { type, idProduct, idBuyer, idShop, totalPrice, idAddress, idDeliver, idPayment } = req.body
+                if (req.user.role !== 'R1') {
+
+                    if (req.user.id != idBuyer) {
+                        resolve({
+                            code: 1,
+                            message: 'You cannot create bill for another user'
+                        })
+                        return;
+                    }
+                }
+                let bill = await db.Bill.create({
+                    idBuyer,
+                    idShop,
+                    totalPrice,
+                    idAddress,
+                    idDeliver,
+                    idPayment,
+                    idStatus: 1
+                })
+                await bill.save()
+
+                if (bill) {
+                    let product = await db.Product.findOne({
+                        where: {
+                            id: idProduct
+                        }
+                    })
+                    if (!product) {
+                        resolve({
+                            message: 'Product not found',
+                            code: 0
+                        })
+                    } else {
+
+                        let BP = await db.BillProduct.create({
+                            idBill: bill.id,
+                            idProduct: idProduct,
+                            quantity: 1,
+                            type: type
+                        })
+                        await BP.save()
+                    }
+
+                }
+                resolve({
+                    message: 'Successfully',
+                    code: 1,
+                })
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 const deleteBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate({ id: req.body?.id });
+            const error = joi.object({ id }).validate(req.query);
             if (error.error) {
                 resolve({
                     code: 0,
@@ -175,7 +261,7 @@ const deleteBill = (req) => {
             } else {
                 let bill = await db.Bill.findOne({
                     where: {
-                        id: req.body?.id
+                        id: req.query.id
                     }
                 })
                 if (!bill) {
@@ -183,36 +269,23 @@ const deleteBill = (req) => {
                         code: 0,
                         message: 'Bill ID not found'
                     })
-                }
-                if (!req.body?.products) {
-                    await db.Bill.update({ idStatus: 5 }, {
-                        where: { id: req.body.id }
-                    })
+                } else {
+
                     await db.BillProduct.destroy({
                         where: {
-                            idBill: bill.id
+                            idBill: bill.id,
                         }
                     })
-                    resolve({
-                        code: 1,
-                        message: `Bill has id : ${req.body.id} deleted`
+                    await db.Bill.destroy({
+                        where: { id: bill.id }
                     })
-                } else {
-                    req.body?.products.map(async (product) => {
-                        console.log(1);
-                        await db.BillProduct.destroy({
-                            where: {
-                                idBill: req.body.id,
-                                idProduct: product.id
-                            }
-                        })
 
-                    })
                     resolve({
                         code: 1,
-                        message: `Product in bill has id : ${req.body.id} updated`
+                        message: `Deleted Bill`
                     })
                 }
+
 
             }
         } catch (error) {
@@ -223,7 +296,7 @@ const deleteBill = (req) => {
 const updateBill = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, idBuyer, idShop, totalPrice, idAddress, idDeliver, idPayment, products }).validate(req.body);
+            const error = joi.object({ id, totalPrice, products }).validate(req.body);
             if (error.error) {
                 resolve({
                     code: 0,
@@ -287,7 +360,7 @@ const updateStatusBill = (req) => {
                         code: 0
                     })
                 } else {
-                    let status = await db.BillStatus.findOne({
+                    let status = await db.StatusBill.findOne({
                         where: {
                             id: req.body.idStatus,
                         }
@@ -432,6 +505,8 @@ module.exports = {
     createStatus,
     deleteStatus,
     updateStatus,
-    updateStatusBill
+    updateStatusBill,
+    getDetailBill,
+    createBillSale,
 
 }

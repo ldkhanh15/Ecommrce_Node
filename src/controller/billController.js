@@ -9,9 +9,27 @@ const getBill = async (req, res) => {
     }
 }
 
+const getDetailBill = async (req, res) => {
+    try {
+        let data = await billService.getDetailBill(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const createBill = async (req, res) => {
     try {
         let data = await billService.createBill(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const createBillSale = async (req, res) => {
+    try {
+        let data = await billService.createBillSale(req);
         return res.status(200).json(data);
     } catch (error) {
         console.log(error);
@@ -89,5 +107,7 @@ module.exports = {
     createStatus,
     updateStatus,
     deleteStatus,
-    updateStatusBill
+    updateStatusBill,
+    getDetailBill,
+    createBillSale
 }

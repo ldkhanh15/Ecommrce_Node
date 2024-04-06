@@ -8,6 +8,23 @@ const getBanner = async (req, res) => {
         console.log(error);
     }
 }
+const getAllBanner = async (req, res) => {
+    try {
+        let data = await bannerService.getAllBanner(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const uploadImage = async (req, res) => {
+    try {
+        let data = await bannerService.uploadImage(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 const createBanner = async (req, res) => {
     try {
@@ -20,7 +37,7 @@ const createBanner = async (req, res) => {
 
 const deleteBanner = async (req, res) => {
     try {
-        let data = await bannerService.deleteBanner(req.body);
+        let data = await bannerService.deleteBanner(req);
         return res.status(200).json(data)
     } catch (error) {
         console.log(error);
@@ -38,7 +55,9 @@ const updateBanner = async (req, res) => {
 
 module.exports = {
     getBanner,
+    getAllBanner,
     createBanner,
     deleteBanner,
-    updateBanner
+    updateBanner,
+    uploadImage
 }

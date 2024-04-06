@@ -41,7 +41,16 @@ const login = (req, res) => {
             })
             resolve({
                 message: "Login successfully",
-                user: existingUser,
+                user: {
+                    id:existingUser.id,
+                    name: existingUser.name,
+                    username: existingUser.username,
+                    email: existingUser.email,
+                    role: existingUser.role,
+                    phone:existingUser.phone,
+                    avatar: existingUser.avatar,
+                    
+                },
                 token,
                 code: 1
             })

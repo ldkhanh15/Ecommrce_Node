@@ -1,11 +1,18 @@
 import db from '../models/index'
+import { Sequelize } from 'sequelize'
 import joi from 'joi'
-import { idBlog, id, idAuthor, name, field, comment, content, star, idParent } from '../helpers/joi_schema'
+import { contentHTML, tag, idBlog, id, idAuthor, name, field, comment, content, star, idParent } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 const getBlog = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Blog.findAll();
+            let data = await db.Blog.findAll({
+                include: [
+                    {
+                        model: db.User, as: 'author', attributes: ['name']
+                    }
+                ]
+            });
 
             resolve({
                 data,
@@ -24,7 +31,7 @@ const getBlogDetail = (req) => {
                 where: { id: req.query.id },
                 include: [
                     {
-                        model: db.BlogDetail, as: 'detail', attributes: ['content', 'comment']
+                        model: db.BlogDetail, as: 'detail', attributes: ['contentHTML', 'comment']
                     },
                     {
                         model: db.BlogComment, as: 'comment', attributes: ['idParent', 'comment', 'star', 'createdAt'],
@@ -36,6 +43,9 @@ const getBlogDetail = (req) => {
                     },
                     {
                         model: db.Tag, as: 'tag', attributes: ['name']
+                    },
+                    {
+                        model: db.User, as: 'author', attributes: ['name','avatar','createdAt'],
                     }
                 ]
             });
@@ -55,7 +65,7 @@ const getBlogDetail = (req) => {
 const createBlog = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ idAuthor, name, field, comment, content }).validate(req.body);
+            const error = joi.object({ name, field, comment, content, tag, contentHTML }).validate(req.body);
             if (error.error) {
                 await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
@@ -67,15 +77,25 @@ const createBlog = (req) => {
                 req.body.fileName = req.file?.filename
                 let blog = await db.Blog.create({
                     ...req.body,
-                    view: 0
+                    view: 0,
+                    idAuthor: req.user.id,
                 })
                 await blog.save();
 
                 let blogDetail = await db.BlogDetail.create({
                     ...req.body,
                     idBlog: blog.id,
+
                 })
                 await blogDetail.save();
+                console.log(req.body.tag);
+                req.body.tag.map(async (item) => {
+                    let tag = await db.Tag.create({
+                        idBlog: blog.id,
+                        name: item
+                    })
+                    await tag.save();
+                })
                 resolve({
                     message: 'Successfully create blog',
                     code: 1
@@ -91,7 +111,7 @@ const createBlog = (req) => {
 const deleteBlog = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id }).validate(req.body)
+            const error = joi.object({ id }).validate(req.query)
             if (error.error) {
                 resolve({
                     message: error.error?.details[0].message,
@@ -100,7 +120,7 @@ const deleteBlog = (req) => {
             } else {
 
                 let blog = await db.Blog.findOne({
-                    where: { id: req.body.id }
+                    where: { id: req.query.id }
                 })
                 if (!blog) {
                     resolve({
@@ -113,13 +133,22 @@ const deleteBlog = (req) => {
                     }
                     await db.BlogDetail.destroy({
                         where: {
-                            idBlog: req.body.id
+                            idBlog: req.query.id
                         }
                     })
                     await db.Blog.destroy({
                         where: {
-                            id: req.body.id
+                            id: req.query.id
                         }
+                    })
+                    await db.Tag.destroy({
+                        where: {
+                            idBlog: req.query.id
+                        }
+                    })
+                    resolve({
+                        message: 'Delete blog successfully',
+                        code: 1
                     })
                 }
             }
@@ -132,7 +161,65 @@ const deleteBlog = (req) => {
 const updateBlog = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ id, name, field, comment, content }).validate(req.body);
+            const error = joi.object({ id, name, field, comment, content, tag, contentHTML }).validate(req.body);
+            if (error.error) {
+                resolve({
+                    message: error.error?.details[0].message,
+                    code: 0
+                })
+            } else {
+                let blog = await db.Blog.findOne({
+                    where: {
+                        id: req.body.id
+                    }
+                })
+                if (!blog) {
+                    resolve({
+                        code: 0,
+                        message: 'Blog id not found'
+                    })
+                } else {
+                    await db.Blog.update({
+                        ...req.body,
+                    }, {
+                        where: {
+                            id: req.body.id
+                        }
+                    })
+                    await db.Tag.destroy({
+                        where: {
+                            idBlog: req.body.id
+                        }
+                    })
+                    req.body.tag.map(async (item) => {
+                        let tag = await db.Tag.create({
+                            idBlog: blog.id,
+                            name: item.name
+                        })
+                        await tag.save();
+                    })
+                    await db.BlogDetail.update(req.body, {
+                        where: {
+                            idBlog: req.body.id
+                        }
+                    })
+                    resolve({
+                        message: 'Update blog successfully',
+                        code: 1
+                    })
+                }
+
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+const uploadImage = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const error = joi.object({ id }).validate(req.body);
             if (error.error) {
                 await cloudinary.uploader.destroy(req?.file?.filename)
                 resolve({
@@ -159,20 +246,15 @@ const updateBlog = (req) => {
                     }
                     await db.Blog.update({
                         ...req.body,
-                        view: 100000
                     }, {
                         where: {
                             id: req.body.id
                         }
                     })
-                    await db.BlogDetail.update(req.body, {
-                        where: {
-                            idBlog: req.body.id
-                        }
-                    })
                     resolve({
-                        message: 'Update blog successfully',
-                        code: 1
+                        message: 'Update blog image successfully',
+                        code: 1,
+                        link: req.file.path
                     })
                 }
 
@@ -352,6 +434,7 @@ module.exports = {
     getComment,
     createComment,
     deleteComment,
-    updateComment
+    updateComment,
+    uploadImage,
 
 }
