@@ -96,6 +96,14 @@ const unlikeProduct = async (req, res) => {
         console.log(error);
     }
 }
+const getSearch = async (req, res) => {
+    try {
+        let data = await productService.getSearch(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 module.exports = {
     getProduct,
     createProduct,
@@ -109,4 +117,5 @@ module.exports = {
     likeProduct,
     unlikeProduct,
     getProductOfShop,
+    getSearch
 }

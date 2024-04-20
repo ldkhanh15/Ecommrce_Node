@@ -1,12 +1,17 @@
 import db from '../models/index'
-import { Sequelize } from 'sequelize'
+import { Op } from 'sequelize'
 import joi from 'joi'
 import { contentHTML, tag, idBlog, id, idAuthor, name, field, comment, content, star, idParent } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 const getBlog = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Blog.findAll({
+            let page = parseInt(req.query.page) || 1;
+            let limit = 12;
+            let offset = (page - 1) * limit;
+            let data = await db.Blog.findAndCountAll({
+                limit,
+                offset,
                 include: [
                     {
                         model: db.User, as: 'author', attributes: ['name']
@@ -15,7 +20,51 @@ const getBlog = (req) => {
             });
 
             resolve({
-                data,
+                data: data.rows,
+                pages: Math.ceil(data.count / limit),
+                message: 'Successfully',
+                code: 1
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getBlogAdmin = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let data;
+            let page = parseInt(req.query.page) || 1;
+            let limit = 5;
+            let offset = (page - 1) * limit;
+            if (req.user.role === 'R2') {
+                data = await db.Blog.findAndCountAll({
+                    limit,
+                    offset,
+                    where: {
+                        idAuthor: req.user.id
+                    },
+                    include: [
+                        {
+                            model: db.User, as: 'author', attributes: ['name']
+                        }
+                    ]
+                });
+            } else if (req.user.role === 'R1') {
+                data = await db.Blog.findAndCountAll({
+                    limit,
+                    offset,
+                    include: [
+                        {
+                            model: db.User, as: 'author', attributes: ['name']
+                        }
+                    ]
+                });
+            }
+
+            resolve({
+                data: data.rows,
+                pages: Math.ceil(data.count / limit),
                 message: 'Successfully',
                 code: 1
             })
@@ -34,7 +83,7 @@ const getBlogDetail = (req) => {
                         model: db.BlogDetail, as: 'detail', attributes: ['contentHTML', 'comment']
                     },
                     {
-                        model: db.BlogComment, as: 'comment', attributes: ['idParent', 'comment', 'star', 'createdAt'],
+                        model: db.BlogComment, as: 'comment', attributes: ['id', 'idParent', 'comment', 'star', 'createdAt'],
                         include: [
                             {
                                 model: db.User, as: 'user', attributes: ['name', 'avatar', 'username']
@@ -45,7 +94,7 @@ const getBlogDetail = (req) => {
                         model: db.Tag, as: 'tag', attributes: ['name']
                     },
                     {
-                        model: db.User, as: 'author', attributes: ['name','avatar','createdAt'],
+                        model: db.User, as: 'author', attributes: ['name', 'avatar', 'createdAt'],
                     }
                 ]
             });
@@ -88,7 +137,6 @@ const createBlog = (req) => {
 
                 })
                 await blogDetail.save();
-                console.log(req.body.tag);
                 req.body.tag.map(async (item) => {
                     let tag = await db.Tag.create({
                         idBlog: blog.id,
@@ -97,7 +145,7 @@ const createBlog = (req) => {
                     await tag.save();
                 })
                 resolve({
-                    message: 'Successfully create blog',
+                    message: 'Blog has been posted successfully',
                     code: 1
                 })
             }
@@ -124,7 +172,7 @@ const deleteBlog = (req) => {
                 })
                 if (!blog) {
                     resolve({
-                        message: 'Blog id not found',
+                        message: 'Blog not found',
                         code: 0
                     })
                 } else {
@@ -147,7 +195,7 @@ const deleteBlog = (req) => {
                         }
                     })
                     resolve({
-                        message: 'Delete blog successfully',
+                        message: `Blog with id ${req.query.id} has been deleted`,
                         code: 1
                     })
                 }
@@ -176,7 +224,7 @@ const updateBlog = (req) => {
                 if (!blog) {
                     resolve({
                         code: 0,
-                        message: 'Blog id not found'
+                        message: 'Blog not found'
                     })
                 } else {
                     await db.Blog.update({
@@ -204,7 +252,7 @@ const updateBlog = (req) => {
                         }
                     })
                     resolve({
-                        message: 'Update blog successfully',
+                        message: `Blog with id ${req.body.id} has been updated`,
                         code: 1
                     })
                 }
@@ -238,7 +286,7 @@ const uploadImage = (req) => {
                     await cloudinary.uploader.destroy(req?.file?.filename)
                     resolve({
                         code: 0,
-                        message: 'Blog id not found'
+                        message: 'Blog not found'
                     })
                 } else {
                     if (blog.fileName) {
@@ -252,7 +300,7 @@ const uploadImage = (req) => {
                         }
                     })
                     resolve({
-                        message: 'Update blog image successfully',
+                        message: `Blog with id ${req.body.id}: one photo has been replaced`,
                         code: 1,
                         link: req.file.path
                     })
@@ -324,7 +372,7 @@ const createComment = (req) => {
                 await comment.save();
                 resolve({
                     code: 1,
-                    message: 'Comment created successfully'
+                    message: `Comment has been posted`
                 })
             }
         } catch (error) {
@@ -351,13 +399,13 @@ const deleteComment = (req) => {
                 })
                 if (!comment) {
                     resolve({
-                        message: 'comment not found',
+                        message: 'Comment not found',
                         code: 0
                     })
                 } else {
                     if (req.user.role !== "R1" && req.body.idAuthor !== String(req.user.id) || req.body.idAuthor !== comment.idAuthor) {
                         resolve({
-                            message: 'You cannot delete this comment',
+                            message: `You cannot delete this comment`,
                             code: 0
                         })
                     }
@@ -369,7 +417,7 @@ const deleteComment = (req) => {
                     })
                     resolve({
                         code: 1,
-                        message: 'Comment deleted successfully'
+                        message: `Comment with id ${req.query.id} has been deleted`
                     })
                 }
             }
@@ -397,14 +445,14 @@ const updateComment = (req) => {
                 })
                 if (!comment) {
                     resolve({
-                        message: 'comment not found',
+                        message: 'Comment not found',
                         code: 0
                     })
                 } else {
 
                     if (req.user.role !== "R1" && req.body.idAuthor !== String(req.user.id) || req.body.idAuthor !== comment.idAuthor) {
                         resolve({
-                            message: 'You cannot update this comment',
+                            message: 'You cannot modify this comment',
                             code: 0
                         })
                     }
@@ -415,7 +463,7 @@ const updateComment = (req) => {
                     })
                     resolve({
                         code: 1,
-                        message: 'Comment updated successfully'
+                        message: `Comment with id ${req.body.id} has been modified`
                     })
                 }
             }
@@ -424,7 +472,30 @@ const updateComment = (req) => {
         }
     })
 }
-
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let search = "";
+            if (req.query.q) {
+                search = req.query.q
+            }
+            let data = await db.Blog.findAll({
+                where: {
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${search}%` } },
+                    ]
+                }
+            })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     getBlog,
     createBlog,
@@ -436,5 +507,6 @@ module.exports = {
     deleteComment,
     updateComment,
     uploadImage,
-
+    getBlogAdmin,
+    getSearch
 }

@@ -1,31 +1,17 @@
 import db from '../models/index'
 import joi from 'joi'
-import { idUser, idParent, idProduct, idBill, star, comment, idBuyer, brand, color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
+import { images, idUser, idParent, idProduct, idBill, star, comment, idBuyer, brand, color, combo, size, nameProduct, price, sale, id, idCate, additional, description, introduce, quantity } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
-
+import { Op } from 'sequelize'
 const getProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log(req.query.id);
-            let data = !req.query.id ?
-                await db.Product.findAll({
-                    include: [
-                        {
-                            model: db.Shop, as: 'shop', attributes: ['username']
-                        },
-                        {
-                            model: db.Cate, as: 'cate', attributes: ['name']
-                        },
-                        {
-                            model: db.ProductImage, as: 'image', attributes: ['link']
-                        },
-                        {
-                            model: db.ProductReview, as: 'review', attributes: ['star']
-                        }
-                    ]
-                })
-                :
-                await db.Product.findOne({
+            let data;
+            let page = parseInt(req.query.page) || 1;
+            let limit = 12;
+            let offset = (page - 1) * limit;
+            if (req.query.id) {
+                data = await db.Product.findOne({
                     where: {
                         id: req.query.id
                     },
@@ -53,11 +39,48 @@ const getProduct = (req) => {
                         }
                     ],
                 })
-            resolve({
-                data,
-                code: 1,
-                message: 'Successfully'
-            })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully',
+                })
+            } else {
+
+                data = await db.Product.findAndCountAll({
+                    offset,
+                    limit,
+                    distinct: true,
+                    include: [
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['id', 'name', 'username']
+                        },
+                        {
+                            model: db.Cate, as: 'cate', attributes: ['name']
+                        },
+                        {
+                            model: db.ProductImage, as: 'image', attributes: ['link']
+                        },
+                        {
+                            model: db.ProductReview, as: 'review', attributes: ['star']
+                        },
+                        {
+                            model: db.Color, as: 'color', attributes: ['name']
+                        },
+                        {
+                            model: db.Size, as: 'size', attributes: ['name']
+                        },
+                        {
+                            model: db.Combo, as: 'combo', attributes: ['name']
+                        },
+                    ]
+                })
+                resolve({
+                    data: data.rows,
+                    pages: Math.ceil(data.count / limit),
+                    code: 1,
+                    message: 'Successfully'
+                })
+            }
         } catch (error) {
             reject(error)
         }
@@ -66,31 +89,54 @@ const getProduct = (req) => {
 const getProductOfShop = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (req.query.id) {
-                if (req.user.role !== 'R1' && req.query.id !== String(req.user.id)) {
-                    resolve({
-                        message: 'Cannot find product',
-                        code: 0
+            let data;
+            let page = parseInt(req.query.page) || 1;
+            let limit = 5;
+            let offset = (page - 1) * limit;
+            if (req.user.role === 'R2') {
+                let shop = await db.Shop.findOne({
+                    where: {
+                        idUser: req.user.id
+                    }
+                })
+                if (shop) {
+
+                    data = await db.Product.findAndCountAll({
+                        where: {
+                            idShop: shop.id
+                        },
+                        limit,
+                        offset,
+                        include: [
+                            {
+                                model: db.ProductDetail, as: 'detailProduct', attributes: ['quantity'],
+                            },
+                            {
+                                model: db.Shop, as: 'shop', attributes: ['name']
+                            }
+                        ]
                     })
                 }
+            } else if (req.user.role === 'R1') {
+                data = await db.Product.findAndCountAll({
+                    limit,
+                    offset,
+                    include: [
+                        {
+                            model: db.ProductDetail, as: 'detailProduct', attributes: ['quantity'],
+                        },
+                        {
+                            model: db.Shop, as: 'shop', attributes: ['name']
+                        }
+                    ]
+                });
             }
 
-            let data = await db.Product.findAll({
-                where: req.query.id ? { idShop: req.query.id } : {},
-                include: [
-                    {
-                        model: db.ProductDetail, as: 'detailProduct', attributes: ['quantity']
-                    },
-                    {
-                        model: db.Shop, as: 'shop', attributes: ['name']
-                    }
-                ]
-            })
-
             resolve({
-                data,
+                data: data.rows,
                 code: 1,
-                message: 'Successfully'
+                message: 'Successfully',
+                pages: Math.ceil(data.count / limit)
             })
 
         } catch (error) {
@@ -202,7 +248,7 @@ const createProductComment = (req) => {
                     })
                     resolve({
                         code: 1,
-                        message: 'Successfully comment'
+                        message: 'Comment posted'
                     })
                 } else {
                     resolve({
@@ -233,7 +279,7 @@ const updateProductComment = (req) => {
                 })
                 if (!commentProduct) {
                     resolve({
-                        message: 'Product review not found',
+                        message: 'Comment not found',
                         code: 0
                     })
                 } else {
@@ -272,7 +318,7 @@ const updateProductComment = (req) => {
                         }
                     })
                     resolve({
-                        message: 'Updated product comment successfully',
+                        message: 'Updated comment successfully',
                         code: 1
                     })
                 }
@@ -298,7 +344,7 @@ const deleteProductComment = (req) => {
                 })
                 if (!productComment) {
                     resolve({
-                        message: 'Product review not found',
+                        message: 'Comment not found',
                         code: 0
                     })
                 } else {
@@ -335,7 +381,7 @@ const deleteProductComment = (req) => {
                     })
 
                     resolve({
-                        message: 'Delete product comment successfully',
+                        message: `Comment of product with id ${product.id} has been deleted`,
                         code: 1
                     })
                 }
@@ -363,9 +409,14 @@ const createProduct = (req) => {
                     where: { id: req.body.idCate }
                 })
                 cate.increment("quantity")
+                let shop = await db.Shop.findOne({
+                    where: {
+                        idUser: req.user.id
+                    }
+                })
                 let product = await db.Product.create({
                     ...req.body,
-                    idShop: req.user.id,
+                    idShop: shop.id || req.user.id,
                     sold: 0,
                     name: req.body.nameProduct,
                     mainImage: req.files[0].path,
@@ -410,7 +461,7 @@ const createProduct = (req) => {
                     await colorItem.save()
                 }))
                 resolve({
-                    message: 'Successfully',
+                    message: 'Add new product successfully',
                     code: 1
                 })
             }
@@ -427,11 +478,9 @@ const createProduct = (req) => {
 const updateProduct = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log(req.body);
-            console.log(req.files);
             const error = joi.object({ id, brand, color, combo, size, description, additional, introduce, idCate, nameProduct, price, sale, quantity }).validate(req.body)
             if (error.error) {
-                Promise.all(req.files?.map(async (file) => {
+                Promise.all(req?.files?.map(async (file) => {
                     await cloudinary.uploader.destroy(file.filename)
                 }))
                 resolve({
@@ -445,12 +494,12 @@ const updateProduct = (req) => {
                     }
                 })
                 if (!product) {
-                    Promise.all(req.files?.map(async (file) => {
+                    Promise.all(req?.files?.map(async (file) => {
                         await cloudinary.uploader.destroy(file.filename)
                     }))
                     resolve({
                         code: 0,
-                        message: 'Product ID not found'
+                        message: 'Product not found'
                     })
                 } else {
                     let images = await db.ProductImage.findAll({
@@ -505,7 +554,7 @@ const updateProduct = (req) => {
                             id: req.body.id
                         }
                     })
-                    Promise.all(req.files?.map(async (file) => {
+                    Promise.all(req?.files?.map(async (file) => {
                         let image = await db.ProductImage.create({
                             idProduct: product.id,
                             link: file.path,
@@ -515,9 +564,14 @@ const updateProduct = (req) => {
                     }))
 
                     req.body.size && Promise.all(req.body.size.map(async (item) => {
+                        let size = await db.Size.findOne({
+                            where: {
+                                name: item
+                            }
+                        })
                         let sizeItem = await db.ProductSize.create({
                             idProduct: product.id,
-                            idSize: item
+                            idSize: size.id
                         })
                         await sizeItem.save()
                     }))
@@ -536,14 +590,14 @@ const updateProduct = (req) => {
                         await colorItem.save()
                     }))
                     resolve({
-                        message: 'Successfully',
+                        message: `Product with id ${product.id} has been updated`,
                         code: 1
                     })
                 }
             }
 
         } catch (error) {
-            Promise.all(req.files?.map(async (file) => {
+            Promise.all(req?.files?.map(async (file) => {
                 await cloudinary.uploader.destroy(file.filename)
             }))
             reject(error)
@@ -567,7 +621,7 @@ const deleteProduct = (req) => {
                 })
                 if (!product) {
                     resolve({
-                        message: 'Product id not found',
+                        message: 'Product not found',
                         code: 0
                     })
                 } else {
@@ -615,7 +669,7 @@ const deleteProduct = (req) => {
 
                 }
                 resolve({
-                    message: 'Successfully',
+                    message: `Product with id ${req.query.id} has been deleted`,
                     code: 1
                 })
             }
@@ -653,7 +707,7 @@ const likeProduct = (req) => {
                     })
                     await like.save()
                     resolve({
-                        message: 'Like product successfully',
+                        message: 'Liked this product',
                         code: 1
                     })
                 }
@@ -695,7 +749,7 @@ const unlikeProduct = (req) => {
                             where: { id: req.body.id }
                         })
                         resolve({
-                            message: 'Successfully unlike this product',
+                            message: 'Unlike this product',
                             code: 1
                         })
                     }
@@ -703,6 +757,30 @@ const unlikeProduct = (req) => {
 
 
             }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let search = "";
+            if (req.query.q) {
+                search = req.query.q
+            }
+            let data = await db.Product.findAll({
+                where: {
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${search}%` } },
+                    ]
+                }
+            })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
         } catch (error) {
             reject(error)
         }
@@ -721,4 +799,5 @@ module.exports = {
     likeProduct,
     unlikeProduct,
     getProductOfShop,
+    getSearch
 }

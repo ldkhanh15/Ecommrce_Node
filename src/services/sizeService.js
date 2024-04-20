@@ -1,7 +1,7 @@
 import db from '../models'
 import joi from 'joi'
 import { id, nameSize } from '../helpers/joi_schema'
-
+import { Op } from 'sequelize'
 const getSize = () => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -31,7 +31,7 @@ const createSize = (req) => {
                 })
                 await size.save();
                 resolve({
-                    message: 'Successfully create size',
+                    message: 'Add new size successfully',
                     code: 1,
                 })
             }
@@ -55,7 +55,7 @@ const deleteSize = (req) => {
                     where: { id: req.query.id }
                 })
                 resolve({
-                    message: 'Successfully delete size',
+                    message: `Size with id ${req.query.id} has been deleted`,
                     code: 1,
                 })
             }
@@ -78,7 +78,7 @@ const updateSize = (req) => {
                     where: { id: req.body.id }
                 })
                 resolve({
-                    message: 'Successfully update size',
+                    message: `Size with ${req.body.id} has been updated`,
                     code: 1,
                 })
             }
@@ -87,10 +87,34 @@ const updateSize = (req) => {
         }
     })
 }
-
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+           let search = "";
+           if(req.query.q){
+            search = req.query.q
+           }
+           let data = await db.Size.findAll({
+            where: {
+                [Op.or]: [
+                    { name: { [Op.like]: `%${search}%` } },
+                  ]
+            }
+          })
+          resolve({
+            data,
+            code:1,
+            message:'Successfully'
+          })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     getSize,
     createSize,
     deleteSize,
     updateSize,
+    getSearch
 }

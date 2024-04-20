@@ -9,6 +9,9 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      idShop:{
+        type: Sequelize.INTEGER
+      },
       maVoucher: {
         type: Sequelize.STRING
       },
@@ -26,9 +29,6 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue:0
       },
-      limit: {
-        type: Sequelize.STRING
-      },
       description: {
         type: Sequelize.STRING
       },
@@ -40,13 +40,6 @@ module.exports = {
         type: Sequelize.INTEGER,
         defaultValue: 0
       },
-      minBill:{
-        type: Sequelize.INTEGER,
-        defaultValue:0
-      },
-      type: {
-        type: Sequelize.STRING
-      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -56,8 +49,16 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+    return queryInterface.sequelize.transaction((t) => {
+      return Promise.all([
+          queryInterface.removeColumn('Vouchers', 'limit', { transaction: t }),
+      ])
+  })
+  
+   
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Vouchers');
+   
   }
 };

@@ -54,11 +54,21 @@ const updateCate = async (req, res) => {
     }
 }
 
+const getSearch = async (req, res) => {
+    try {
+        let data = await categoryService.getSearch(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports ={
     getCate,
     createCate,
     deleteCate,
     updateCate,
     getAllCate,
-    uploadImage
+    uploadImage,
+    getSearch
 }

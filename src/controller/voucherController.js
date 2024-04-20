@@ -9,6 +9,15 @@ const getVoucher = async (req, res) => {
     }
 }
 
+const getVoucherOfAll = async (req, res) => {
+    try {
+        const data = await voucherService.getVoucherOfAll(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const getVoucherOfShop = async (req, res) => {
     try {
         const data = await voucherService.getVoucherOfShop(req);
@@ -44,10 +53,21 @@ const updateVoucher = async (req, res) => {
         console.log(error);
     }
 }
+
+const getSearch = async (req, res) => {
+    try {
+        const data = await voucherService.getSearch(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 module.exports = {
     getVoucher,
     createVoucher,
     deleteVoucher,
     updateVoucher,
     getVoucherOfShop, 
+    getVoucherOfAll,
+    getSearch
 }

@@ -6,7 +6,6 @@ const login = (req, res) => {
     return new Promise(async (resolve, reject) => {
         try {
             const { email, password } = req.body;
-            console.log(email, password);
             let existingUser = await db.User.findOne({
                 where: {
                     email
@@ -42,14 +41,13 @@ const login = (req, res) => {
             resolve({
                 message: "Login successfully",
                 user: {
-                    id:existingUser.id,
+                    id: existingUser.id,
                     name: existingUser.name,
                     username: existingUser.username,
                     email: existingUser.email,
                     role: existingUser.role,
-                    phone:existingUser.phone,
+                    phone: existingUser.phone,
                     avatar: existingUser.avatar,
-                    
                 },
                 token,
                 code: 1
@@ -100,7 +98,39 @@ const register = (req) => {
         try {
 
             resolve({
-                message: 'Successfully'
+                message: 'Register Successfully'
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const check = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const cookie = req.headers?.authorization;
+            const token = cookie?.split(' ')[1];
+            if (!token) {
+                resolve({
+                    message: 'Please login to continue',
+                    code: 0,
+                    user:null
+                })
+            }
+            jwt.verify(String(token), process.env.JWT_SECRET, (err, user) => {
+                if (err) {
+                    resolve({
+                        message:'Token is invalid or expired',
+                        code:0,
+                        user:null
+                    })
+                }
+                resolve({
+                    message:'Check login successfully',
+                    code:1,
+                    user:req.user
+                })
+
             })
         } catch (error) {
             reject(error)
@@ -110,5 +140,6 @@ const register = (req) => {
 module.exports = {
     login,
     logout,
-    register
+    register,
+    check
 }

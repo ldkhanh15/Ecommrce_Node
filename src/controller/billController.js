@@ -9,9 +9,27 @@ const getBill = async (req, res) => {
     }
 }
 
+const getBillDashboard = async (req, res) => {
+    try {
+        let data = await billService.getBillDashboard(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const getDetailBill = async (req, res) => {
     try {
         let data = await billService.getDetailBill(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const getProductComment = async (req, res) => {
+    try {
+        let data = await billService.getProductComment(req);
         return res.status(200).json(data);
     } catch (error) {
         console.log(error);
@@ -98,6 +116,15 @@ const deleteStatus = async (req, res) => {
     }
 }
 
+const getSearch = async (req, res) => {
+    try {
+        let data = await billService.getSearch(req);
+        return res.status(200).json(data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getBill,
     createBill,
@@ -109,5 +136,8 @@ module.exports = {
     deleteStatus,
     updateStatusBill,
     getDetailBill,
-    createBillSale
+    createBillSale,
+    getProductComment,
+    getBillDashboard,
+    getSearch
 }

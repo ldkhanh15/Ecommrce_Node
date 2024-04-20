@@ -23,8 +23,20 @@ const getAllProduct = (req) => {
                                 model: db.Shop, as: 'shop', attributes: ['username']
                             },
                             {
+                                model: db.ProductImage, as: 'image', attributes: ['link']
+                            },
+                            {
                                 model: db.ProductReview, as: 'review', attributes: ['star']
-                            }
+                            },
+                            {
+                                model: db.Color, as: 'color', attributes: ['name']
+                            },
+                            {
+                                model: db.Size, as: 'size', attributes: ['name']
+                            },
+                            {
+                                model: db.Combo, as: 'combo', attributes: ['name']
+                            },
                         ]
                     }
                 ]
@@ -68,7 +80,7 @@ const addProduct = (req) => {
                     })
                     if (saleExist) {
                         resolve({
-                            message: 'This product has already been sale',
+                            message: 'This product is on sale',
                             code: 0
                         })
                     } else {
@@ -118,7 +130,7 @@ const deleteProduct = (req) => {
                         }
                     })
                     resolve({
-                        message: 'ProductSale deleted successfully',
+                        message: `Product with id ${productSale.id} has been removed from promotion`,
                         code: 1
                     })
                 }
@@ -158,7 +170,7 @@ const updateProduct = (req) => {
                         }
                     })
                     resolve({
-                        message: 'ProductSale updated successfully',
+                        message: `Product with id ${productSale.id} has been modified from promotion`, 
                         code: 1
                     })
                 }

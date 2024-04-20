@@ -1,25 +1,47 @@
 import db from '../models/index'
 import joi from 'joi'
-import { Sequelize } from 'sequelize'
+import { Op } from 'sequelize'
 import { idDeliver, idShop, email, password, name, username, phone, bank, introduce, id, address } from '../helpers/joi_schema'
 import cloudinary from 'cloudinary'
 
 const getVendor = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Shop.findAll({
-                where: req.query.id ? { id: req.query.id } : {},
-                include: [
-                    {
-                        model: db.Bill, as: 'bill', attributes: ['totalPrice']
-                    }
-                ]
-            })
-            resolve({
-                data,
-                code: 1,
-                message: 'Successfully'
-            })
+            let data;
+            let page = parseInt(req.query.page) || 1;
+            let limit = 5;
+            let offset = (page - 1) * limit;
+            if (req.query.id) {
+                data = await db.Shop.findAll({
+                    where: { idUser: req.query.id } ,
+                    include: [
+                        {
+                            model: db.Bill, as: 'bill', attributes: ['totalPrice']
+                        }
+                    ]
+                })
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            } else {
+                data = await db.Shop.findAndCountAll({
+                    limit,
+                    offset,
+                    include: [
+                        {
+                            model: db.Bill, as: 'bill', attributes: ['totalPrice']
+                        }
+                    ]
+                })
+                resolve({
+                    data: data.rows,
+                    code: 1,
+                    message: 'Successfully',
+                    pages: Math.ceil(data.count / limit)
+                })
+            }
         } catch (error) {
             reject(error)
         }
@@ -30,15 +52,15 @@ const getVendorAll = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
             let data;
-            if(req.query.id) {
+            if (req.query.id) {
                 data = await db.Shop.findOne({
-                    where:{
+                    where: {
                         id: req.query.id
                     },
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['id','name','price','mainImage','hoverImage','sale','brand'],
-                            include:[
+                            model: db.Product, as: 'product', attributes: ['id', 'name', 'price', 'mainImage', 'hoverImage', 'sale', 'brand'],
+                            include: [
                                 {
                                     model: db.ProductReview, as: 'review', attributes: ['star']
                                 }
@@ -46,12 +68,23 @@ const getVendorAll = (req) => {
                         },
                     ],
                 })
-            }else{
-                data = await db.Shop.findAll({
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
+            } else {
+                let page = parseInt(req.query.page) || 1;
+                let limit = 10;
+                let offset = (page - 1) * limit;
+                data = await db.Shop.findAndCountAll({
+                    offset,
+                    limit,
+                    distinct: true,
                     include: [
                         {
-                            model: db.Product, as: 'product', attributes: ['name','price','mainImage','hoverImage','sale','brand'],
-                            include:[
+                            model: db.Product, as: 'product', attributes: ['name', 'price', 'mainImage', 'hoverImage', 'sale', 'brand'],
+                            include: [
                                 {
                                     model: db.ProductReview, as: 'review', attributes: ['star']
                                 }
@@ -59,12 +92,15 @@ const getVendorAll = (req) => {
                         },
                     ],
                 })
+                resolve({
+                    data: data.rows,
+                    pages: Math.ceil(data.count / limit),
+                    count:data.count,
+                    code: 1,
+                    message:'Successfully',
+                })
             }
-            resolve({
-                data,
-                code: 1,
-                message: 'Successfully'
-            })
+          
         } catch (error) {
             reject(error)
         }
@@ -81,6 +117,7 @@ const createVendor = (req) => {
                     message: error.error?.details[0].message
                 })
             } else {
+
                 let vendor = await db.Shop.create(req.body);
                 if (!vendor) {
                     resolve({
@@ -119,7 +156,7 @@ const deleteVendor = (req) => {
                 if (!vendor) {
                     resolve({
                         code: 0,
-                        message: 'Vendor ID not found'
+                        message: 'Vendor not found'
                     })
                 } else {
                     if (vendor.fileName) {
@@ -165,7 +202,7 @@ const updateVendor = (req) => {
                     })
                     resolve({
                         code: 1,
-                        message: 'Update vendor successfully'
+                        message: `Vendor with  id ${req.body.id} has been updated`
                     })
                 }
             }
@@ -198,7 +235,7 @@ const updateAvatarVendor = (req) => {
                     await cloudinary.uploader.destroy(req?.file?.filename)
                     resolve({
                         code: 0,
-                        message: 'Vendor ID not found'
+                        message: 'Vendor not found'
                     })
                 } else {
                     if (vendor.fileName) {
@@ -209,7 +246,7 @@ const updateAvatarVendor = (req) => {
                     })
                     resolve({
                         code: 1,
-                        message: 'Update vendor avatar successfully'
+                        message: `Update avatar for vendor ${req.body.id} successfully`
                     })
                 }
             }
@@ -229,19 +266,39 @@ const getDeliver = (req) => {
                     code: 0
                 })
             } else {
-                let data = await db.Shop.findOne({
-                    where: { id: req.query.id },
-                    include: [
-                        {
-                            model: db.Deliver, as: 'deliver', attributes: ['name', 'id']
-                        }
-                    ]
+                let shop = await db.Shop.findOne({
+                    where: {
+                        idUser: req.query.id
+                    }
                 })
-                resolve({
-                    message: 'Successfully',
-                    code: 1,
-                    data
-                })
+                if (!shop) {
+                    resolve({
+                        message: 'Shop not found',
+                        code: 0
+                    })
+                } else {
+                    if (String(req.user.id) !== shop.idUser && req.user.role !== 'R1') {
+                        resolve({
+                            message: 'You cannot access deliver of this shop',
+                            code: 0
+                        })
+                    } else {
+                        let data = await db.Shop.findOne({
+                            where: { id: shop.id },
+                            include: [
+                                {
+                                    model: db.Deliver, as: 'deliver', attributes: ['name', 'id']
+                                }
+                            ]
+                        })
+                        resolve({
+                            message: 'Successfully',
+                            code: 1,
+                            data
+                        })
+                    }
+                }
+
             }
         } catch (error) {
             reject(error)
@@ -258,46 +315,61 @@ const addDeliver = (req) => {
                     code: 0
                 })
             } else {
-                let checkDeliver = await db.ShopDeliver.findOne({
+                let shop = await db.Shop.findOne({
                     where: {
-                        idDeliver: req.body.idDeliver,
-                        idShop: req.body.idShop
+                        idUser: req.body.idShop
                     }
                 })
-                if (checkDeliver) {
+                if (!shop) {
                     resolve({
-                        message: 'Deliver is already registered',
+                        message: 'Shop not found',
                         code: 0
                     })
                 } else {
-                    let deliver = await db.Deliver.findOne({
-                        where: { id: req.body.idDeliver }
-                    })
-                    let shop = await db.Shop.findOne({
-                        where: {
-                            id: req.body.idShop
-                        }
-                    })
-                    if (!shop || !deliver) {
+                    if (String(req.user.id) !== shop.idUser && req.user.role !== 'R1') {
                         resolve({
-                            message: 'Cannot find delivery or shop',
+                            message: 'You cannot add deliver to another shop',
                             code: 0
                         })
-                    }
-                    if (shop.idUser !== String(req.user.id) && req.user.role !== 'R1') {
-                        resolve({
-                            message: 'You cannot add deliver another shop'
+                    } else {
+                        let checkDeliver = await db.ShopDeliver.findOne({
+                            where: {
+                                idDeliver: req.body.idDeliver,
+                                idShop: shop.id
+                            }
                         })
-                    }
+                        if (checkDeliver) {
+                            resolve({
+                                message: 'Deliver is already registered',
+                                code: 0
+                            })
+                        } else {
+                            let deliver = await db.Deliver.findOne({
+                                where: { id: req.body.idDeliver }
+                            })
+                            if (!deliver) {
+                                resolve({
+                                    message: 'Cannot find delivery',
+                                    code: 0
+                                })
+                            }
+                            if (shop.idUser !== String(req.user.id) && req.user.role !== 'R1') {
+                                resolve({
+                                    message: 'You cannot add deliver another shop'
+                                })
+                            }
 
-                    let deliverShop = await db.ShopDeliver.create({
-                        ...req.body
-                    })
-                    await deliverShop.save();
-                    resolve({
-                        message: 'Add delivery successfully',
-                        code: 1
-                    })
+                            let deliverShop = await db.ShopDeliver.create({
+                                idShop: shop.id,
+                                idDeliver: req.body.idDeliver
+                            })
+                            await deliverShop.save();
+                            resolve({
+                                message: 'Add delivery successfully',
+                                code: 1
+                            })
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -308,7 +380,6 @@ const addDeliver = (req) => {
 const delDeliver = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            console.log(req.query.id);
             const error = joi.object({ idShop, idDeliver }).validate(req.query)
             if (error.error) {
                 resolve({
@@ -316,9 +387,18 @@ const delDeliver = (req) => {
                     code: 0
                 })
             } else {
+                let shop = await db.Shop.findOne({
+                    where: { idUser: req.query.idShop }
+                })
+                if (!shop) {
+                    resolve({
+                        message: 'Shop not found',
+                        code: 0
+                    })
+                }
                 let shopDeliver = await db.ShopDeliver.findOne({
                     where: {
-                        idShop: req.query.idShop,
+                        idShop: shop.id,
                         idDeliver: req.query.idDeliver
                     }
                 })
@@ -329,31 +409,23 @@ const delDeliver = (req) => {
                         code: 0
                     })
                 } else {
-                    let shop = await db.Shop.findOne({
-                        where: { id: shopDeliver.idShop }
-                    })
-                    if (!shop) {
+
+                    if (shop.idUser !== String(req.user.id) && req.user.role !== 'R1') {
                         resolve({
-                            message: 'Shop not found',
-                            code: 0
+                            message: 'You cannot add deliver another shop'
                         })
                     } else {
-                        if (shop.idUser !== String(req.user.id) && req.user.role !== 'R1') {
-                            resolve({
-                                message: 'You cannot add deliver another shop'
-                            })
-                        } else {
-                            await db.ShopDeliver.destroy({
-                                where: {
-                                    idShop: req.query.idShop,
-                                    idDeliver: req.query.idDeliver
-                                }
-                            })
-                            resolve({
-                                message: 'Successfully deleted',
-                                code: 1
-                            })
-                        }
+                        await db.ShopDeliver.destroy({
+                            where: {
+                                idShop: shop.id,
+                                idDeliver: req.query.idDeliver
+                            }
+                        })
+                        resolve({
+                            message: `Deliver with id ${req.query.idDeliver} has been deleted`,
+                            code: 1
+                        })
+
                     }
 
                 }
@@ -364,7 +436,32 @@ const delDeliver = (req) => {
         }
     })
 }
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let search = "";
+            if (req.query.q) {
+                search = req.query.q
+            }
+            let data = await db.Shop.findAll({
+                where: {
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${search}%` } },
+                        { username: { [Op.like]: `%${search}%` } },
 
+                    ]
+                }
+            })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     getVendor,
     createVendor,
@@ -374,5 +471,6 @@ module.exports = {
     addDeliver,
     delDeliver,
     getDeliver,
-    getVendorAll
+    getVendorAll,
+    getSearch
 }

@@ -36,9 +36,19 @@ const updatePayment=async(req,res)=>{
     }
 }
 
+const getSearch=async(req,res)=>{
+    try {
+        const data=await paymentService.getSearch(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports ={
     getPayment,
     createPayment,
     deletePayment,
     updatePayment,
+    getSearch
 }

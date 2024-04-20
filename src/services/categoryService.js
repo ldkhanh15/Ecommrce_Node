@@ -2,7 +2,7 @@ import db from '../models'
 import { name, id, quantity, featured } from '../helpers/joi_schema'
 import joi from 'joi'
 import cloudinary from 'cloudinary'
-
+import { Op } from 'sequelize'
 const getCate = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -37,11 +37,17 @@ const getCate = (req) => {
 const getAllCate = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Cate.findAll({
+            let page = parseInt(req.query.page) || 1;
+            let limit = 5;
+            let offset = (page - 1) * limit;
+            let data = await db.Cate.findAndCountAll({
+                offset,
+                limit,
                 attributes: { exclude: ['fileName'] },
             });
             resolve({
-                data,
+                data: data.rows,
+                pages: Math.ceil(data.count / limit),
                 message: 'Successfully',
                 code: 1
             })
@@ -57,7 +63,7 @@ const uploadImage = (req) => {
         try {
             const error = joi.object({ id }).validate(req.body);
             if (error.error) {
-                if(req.file){
+                if (req.file) {
                     await cloudinary.uploader.destroy(req?.file?.filename)
                 }
                 resolve({
@@ -69,12 +75,12 @@ const uploadImage = (req) => {
                     where: { id: req.body.id }
                 })
                 if (!cate) {
-                    if(req.file){
+                    if (req.file) {
                         await cloudinary.uploader.destroy(req?.file?.filename)
                     }
                     resolve({
                         code: 0,
-                        message: 'Cate not found'
+                        message: 'Category not found'
                     })
                 } else {
                     if (cate.fileName) {
@@ -95,7 +101,7 @@ const uploadImage = (req) => {
             }
 
         } catch (error) {
-            if(req.file){
+            if (req.file) {
                 await cloudinary.uploader.destroy(req?.file?.filename)
             }
             reject(error)
@@ -126,12 +132,12 @@ const createCate = (req) => {
                     image,
                     fileName,
                     featured: req.body.featured === "true" ? true : false,
-                    quantity:0,
+                    quantity: 0,
                     ...req.body
                 })
                 await cate.save();
                 resolve({
-                    message: 'Successfully',
+                    message: 'Add new category successfully',
                     code: 1
                 })
             }
@@ -168,7 +174,7 @@ const deleteCate = (req) => {
                 })
 
                 resolve({
-                    message: 'Deleted category successfully',
+                    message: `Category with id ${req.query.id} has been deleted`,
                     code: 1
                 })
             }
@@ -192,7 +198,7 @@ const updateCate = (req) => {
                 })
                 if (!cate) {
                     resolve({
-                        message: 'ID category not found',
+                        message: 'Category not found',
                         code: 0
                     })
                 } else {
@@ -204,11 +210,35 @@ const updateCate = (req) => {
                         where: { id: req.body?.id }
                     })
                     resolve({
-                        message: 'Update category successfully',
+                        message: `Category with id ${req.body?.id} has been updated`,
                         code: 1
                     })
                 }
             }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let search = "";
+            if (req.query.q) {
+                search = req.query.q
+            }
+            let data = await db.Cate.findAll({
+                where: {
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${search}%` } },
+                    ]
+                }
+            })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
         } catch (error) {
             reject(error)
         }
@@ -221,4 +251,5 @@ module.exports = {
     updateCate,
     getAllCate,
     uploadImage,
+    getSearch
 }

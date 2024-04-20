@@ -2,76 +2,58 @@ import db from '../models/index'
 import bcrypt from 'bcryptjs'
 import { email, password, name, username, birthday, gender, id, phone, role, idUser, address } from '../helpers/joi_schema'
 import joi from 'joi'
-
+const { Op } = require('sequelize');
 
 const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(10))
 
 const getUser = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (req.user.role !== 'R1') {
-                if (req.query.id) {
-                    if (req.query.id !== String(req.user.id)) {
-                        resolve({
-                            message: 'You are not allowed to get information another user',
-                            code: 0
-                        })
-                    }
-                    let data = await db.User.findOne({
-                        where: { id: req.query.id },
-                        attributes: {
-                            exclude: ['password']
-                        }
-                    });
+            if (req.query.id) {
+                if (req.query.id !== String(req.user.id)) {
                     resolve({
-                        data,
-                        code: 1,
-                        message: 'Successfully'
-                    })
-                } else {
-                    let data = await db.User.findOne({
-                        where: { id: req.user.id },
-                        attributes: {
-                            exclude: ['password']
-                        }
-                    });
-                    resolve({
-                        data,
-                        code: 1,
-                        message: 'Successfully'
+                        message: 'You are not allowed to get information another user',
+                        code: 0
                     })
                 }
-            }
-            let data;
-            if (req.query.id) {
-                data = await db.User.findOne({
+                let data = await db.User.findOne({
                     where: { id: req.query.id },
+
                     attributes: {
                         exclude: ['password']
                     }
                 });
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
             } else {
-                data = await db.User.findAll({
+                let data = await db.User.findOne({
+                    where: { id: req.user.id },
                     attributes: {
                         exclude: ['password']
                     }
                 });
+                resolve({
+                    data,
+                    code: 1,
+                    message: 'Successfully'
+                })
             }
 
-            resolve({
-                data,
-                code: 1,
-                message: 'Successfully'
-            })
         } catch (error) {
             reject(error)
         }
     })
 }
+
 const getCustomer = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let { id } = req.query
+            let page = parseInt(req.query.page) || 1;
+            let limit = 5;
+            let offset = (page - 1) * limit;
             if (req.user.role !== 'R1') {
                 if (id !== String(req.user.id)) {
                     resolve({
@@ -80,13 +62,12 @@ const getCustomer = (req) => {
                     })
                 }
             }
-            let data = await db.User.findAll({
-                where: id ? {
-                    id: id,
-                } : {},
+            let data = await db.User.findAndCountAll({
                 attributes: {
                     exclude: ['password', 'avatar', 'gender', 'fileName', 'birthday']
                 },
+                limit,
+                offset,
                 include: [
                     {
                         model: db.Bill, as: 'bill', attributes: [
@@ -96,9 +77,11 @@ const getCustomer = (req) => {
                         ]
                     }
                 ],
+                group:['User.id']
             });
             resolve({
-                data,
+                data: data.rows,
+                pages: Math.ceil(data.rows.length / limit),
                 code: 1,
                 message: 'Successfully'
             })
@@ -137,7 +120,7 @@ const createUser = (req) => {
                         await vendor.save()
                     }
                     resolve({
-                        message: 'Successfully created',
+                        message: 'Register user successfully',
                         code: 1
                     })
                 } else {
@@ -191,7 +174,7 @@ const updateUser = (req) => {
                         where: { id }
                     })
                     resolve({
-                        message: 'User updated successfully',
+                        message: `User with id ${user.id} has been updated`,
                         code: 1
                     })
                 }
@@ -219,7 +202,7 @@ const deleteUser = (req) => {
                     where: { id: req.body.id },
                 })
                 resolve({
-                    message: 'User deleted successfully',
+                    message: `User with id ${req.body.id} has been deleted`,
                     code: 1
                 })
             } else {
@@ -286,8 +269,8 @@ const createAddress = (req) => {
                         })
                         await address.save();
                         resolve({
-                            message: 'Address created successfully',
-                            code:1,
+                            message: 'Add new address successfully',
+                            code: 1,
 
                         })
                     }
@@ -300,7 +283,7 @@ const createAddress = (req) => {
                     })
                     if (!user) {
                         resolve({
-                            message: 'Id user not found',
+                            message: 'User not found',
                             code: 0
                         })
                     } else {
@@ -309,7 +292,7 @@ const createAddress = (req) => {
                         })
                         await address.save();
                         resolve({
-                            message: 'Address created successfully',
+                            message: 'Add new address successfully',
                             code: 1
                         })
                     }
@@ -343,24 +326,24 @@ const updateAddress = (req) => {
                 let address = await db.AddressUser.findOne({
                     where: {
                         id: req.body.idUser,
-                        idUser: req.body.idUser
+                        idUser: req.body.id
                     }
                 })
                 if (!address) {
                     resolve({
-                        message: 'Id address not found',
+                        message: 'Address not found',
                         code: 0
                     })
                 } else {
                     await db.AddressUser.update(req.body, {
                         where: {
-                            id: req.body.idUser,
+                            id: req.body.id,
                             idUser: req.body.idUser
                         }
                     })
 
                     resolve({
-                        message: 'Address updated successfully',
+                        message: `Address with id ${req.body.id} has been updated`,
                         code: 1
                     })
                 }
@@ -397,7 +380,7 @@ const deleteAddress = (req) => {
                 })
                 if (!address) {
                     resolve({
-                        message: 'Id address not found',
+                        message: 'Address not found',
                         code: 0
                     })
                 } else {
@@ -409,11 +392,37 @@ const deleteAddress = (req) => {
                     })
 
                     resolve({
-                        message: 'Address deleted successfully',
+                        message: `Address with id ${req.query.id} has been deleted`,
                         code: 1
                     })
                 }
             }
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let search = "";
+            if (req.query.q) {
+                search = req.query.q
+            }
+            let data = await db.User.findAll({
+                where: {
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${search}%` } },
+                        { username: { [Op.like]: `%${search}%` } },
+
+                    ]
+                }
+            })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
         } catch (error) {
             reject(error)
         }
@@ -429,4 +438,5 @@ module.exports = {
     createAddress,
     updateAddress,
     deleteAddress,
+    getSearch
 }

@@ -6,6 +6,7 @@ const sequelize = new Sequelize('e_commerce', 'root', null, {
     host: 'localhost',
     dialect: 'mysql',
     logging: false,
+    timezone:"+07:00"
 });
 
 let connectDB = async () => {

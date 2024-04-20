@@ -99,6 +99,14 @@ const isBuyer = (req, res, next) => {
         }
     }
 }
+const check = async (req, res) => {
+    try {
+        let data=await authService.check(req)
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 module.exports = {
     register,
     login,
@@ -108,4 +116,5 @@ module.exports = {
     isAdmin,
     isSeller,
     isBuyer,
+    check
 }

@@ -28,3 +28,14 @@ export const notAuth = (mes, res) => {
         code: 0
     })
 }
+export const handleUnauthorizedError = (err, req, res, next) => {
+    console.log(123);
+    if (err.status === 401) {
+        console.log(234);
+        return res.status(200).json({
+            message: 'You cannot access this page',
+            code: 0
+        });
+    }
+    next();
+}

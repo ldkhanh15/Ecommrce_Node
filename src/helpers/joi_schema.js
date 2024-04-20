@@ -50,7 +50,6 @@ export const salePT = joi.number();
 export const salePrice = joi.number();
 export const minBill = joi.number().required();
 export const type = joi.string().required();
-export const limit = joi.string().required();
 
 //BLOG
 export const field = joi.string().required();
@@ -73,7 +72,7 @@ export const brand = joi.string();
 export const size = joi.array();
 export const color = joi.array();
 export const combo = joi.array();
-
+export const idVoucher = joi.string();
 //COMMENT
 export const star = joi.string().required();
 export const idBill = joi.string().required();
@@ -81,3 +80,5 @@ export const idParent = joi.string();
 
 //Deliver
 export const nameDeliver = joi.string().required();
+
+export const images= joi.array();

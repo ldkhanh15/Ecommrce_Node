@@ -53,11 +53,21 @@ const updateBanner = async (req, res) => {
     }
 }
 
+const getSearch = async (req, res) => {
+    try {
+        let data = await bannerService.getSearch(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getBanner,
     getAllBanner,
     createBanner,
     deleteBanner,
     updateBanner,
-    uploadImage
+    uploadImage,
+    getSearch
 }

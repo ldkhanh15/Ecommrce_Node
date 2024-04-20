@@ -16,6 +16,9 @@ module.exports = {
       idBill: {
         type: Sequelize.STRING
       },
+      discount: {
+        type: Sequelize.FLOAT
+      },
       type: {
         type: Sequelize.STRING
       },
@@ -31,6 +34,13 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+    return [
+      queryInterface.addColumn(
+        'BillProducts',
+        'discount',
+        Sequelize.FLOAT
+      )
+    ]
   },
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('BillProducts');

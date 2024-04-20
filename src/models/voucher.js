@@ -11,30 +11,8 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Voucher.belongsToMany(models.User, {
-        through: 'UserVoucher',
-        foreignKey: 'idVoucher',
-        otherKey: 'idUser',
-        as: 'user', // Tên của association
-      })
-      Voucher.belongsToMany(models.Shop, {
-        through: 'VoucherShop',
-        foreignKey: 'idVoucher',
-        otherKey: 'idShop',
-        as: 'shop', // Tên của association
-      })
-      Voucher.belongsToMany(models.Deliver, {
-        through: 'VoucherDeliver',
-        foreignKey: 'idVoucher',
-        otherKey: 'idDeliver',
-        as: 'deliver', // Tên của association
-      })
-      Voucher.belongsToMany(models.Payment, {
-        through: 'VoucherPayment',
-        foreignKey: 'idVoucher',
-        otherKey: 'idPayment',
-        as: 'payment', // Tên của association
-      })
+      Voucher.belongsTo(models.Shop, { foreignKey: 'idShop', as: 'shop' })
+
     }
   }
   Voucher.init({
@@ -43,12 +21,10 @@ module.exports = (sequelize, DataTypes) => {
     end: DataTypes.DATE,
     quantity: DataTypes.INTEGER,
     remain: DataTypes.INTEGER,
-    limit: DataTypes.STRING,
     description: DataTypes.STRING,
     salePT: DataTypes.INTEGER,
     salePrice: DataTypes.INTEGER,
-    minBill: DataTypes.INTEGER,
-    type: DataTypes.STRING,
+    idShop: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Voucher',

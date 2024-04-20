@@ -18,6 +18,7 @@ router.put('/address/update', userController.updateAddress)
 router.delete('/address/delete', userController.deleteAddress)
 
 router.use(authController.isSeller)
+router.get('/search', userController.getSearch)
 router.get('/customer', userController.getCustomer)
 router.use(authController.isAdmin)
 router.post('/create', userController.createUser)

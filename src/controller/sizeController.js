@@ -37,9 +37,19 @@ const updateSize = async (req, res) => {
     }
 }
 
+const getSearch = async (req, res) => {
+    try {
+        const data = await sizeService.getSearch(req);
+        return res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     getSize,
     createSize,
     deleteSize,
     updateSize,
+    getSearch
 }

@@ -1,10 +1,13 @@
 import db from '../models'
 import joi from 'joi'
+import { Op } from 'sequelize'
 import { id,nameDeliver, price } from '../helpers/joi_schema'
 const getDeliver = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Deliver.findAll();
+            let data = await db.Deliver.findAll({
+              
+            });
             resolve({
                 message: 'Successfully',
                 code: 1,
@@ -39,7 +42,7 @@ const createDeliver = (data) => {
                 const deliver = await db.Deliver.create(data)
                 await deliver.save();
                 resolve({
-                    message: 'Successfully',
+                    message: 'Add new deliver successfully',
                     code: 1,
                 })
 
@@ -73,7 +76,7 @@ const deleteDeliver = (data) => {
                         where: { id: data.id }
                     })
                     resolve({
-                        message: 'Deliver deleted',
+                        message: `Deliver with id ${data.id} has been deleted`,
                         code: 1
                     })
                 }
@@ -110,7 +113,7 @@ const updateDeliver = (data) => {
                         ...data
                     })
                     resolve({
-                        message: 'Deliver updated',
+                        message: `Deliver with id ${data.id} has been updated`,
                         code: 1
                     })
                 }
@@ -120,9 +123,34 @@ const updateDeliver = (data) => {
         }
     })
 }
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+           let search = "";
+           if(req.query.q){
+            search = req.query.q
+           }
+           let data = await db.Deliver.findAll({
+            where: {
+                [Op.or]: [
+                    { name: { [Op.like]: `%${search}%` } },   
+                  ]
+            }
+          })
+          resolve({
+            data,
+            code:1,
+            message:'Successfully'
+          })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     createDeliver,
     getDeliver,
     deleteDeliver,
-    updateDeliver
+    updateDeliver,
+    getSearch
 }

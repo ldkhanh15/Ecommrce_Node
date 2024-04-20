@@ -30,12 +30,6 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'idPayment',
         as: 'payment', // Tên của association
       })
-      User.belongsToMany(models.Voucher, {
-        through: 'UserVoucher',
-        foreignKey: 'idUser',
-        otherKey: 'idVoucher',
-        as: 'voucher', // Tên của association
-      })
     }
   }
   User.init({

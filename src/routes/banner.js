@@ -9,6 +9,7 @@ router.get('/', bannerController.getBanner)
 //PRIVATE ROUTES
 router.use(authController.verifyToken)
 router.use(authController.isAdmin)
+router.get('/search', bannerController.getSearch)
 router.get('/all', bannerController.getAllBanner)
 router.post('/create', cloudinary.uploadImage.single('image'), bannerController.createBanner);
 router.post('/upload', cloudinary.uploadImage.single('image'), bannerController.uploadImage);

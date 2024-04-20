@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     idBill: DataTypes.STRING,
     idProduct: DataTypes.STRING,
     quantity: DataTypes.INTEGER,
-    type: DataTypes.STRING
+    type: DataTypes.STRING,
+    discount: DataTypes.FLOAT,
   }, {
     sequelize,
     modelName: 'BillProduct',

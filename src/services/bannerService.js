@@ -2,6 +2,7 @@ import db from '../models'
 import cloudinary from 'cloudinary'
 import joi from 'joi'
 import { id, start, end, title, subTitle, main } from '../helpers/joi_schema'
+import { Op } from 'sequelize'
 const getBanner = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -16,7 +17,7 @@ const getBanner = (req) => {
                     attributes: { exclude: ['fileName'] },
                     where: {
                         main: req.query.main === "true" ? true : false
-                    }
+                    },
                 });
                 resolve({
                     data,
@@ -32,11 +33,17 @@ const getBanner = (req) => {
 const getAllBanner = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            let data = await db.Banner.findAll({
+            let page = parseInt(req.query.page) || 1;
+            let limit = 5;
+            let offset = (page - 1) * limit;
+            let data = await db.Banner.findAndCountAll({
+                limit,
+                offset,
                 attributes: { exclude: ['fileName'] },
             });
             resolve({
-                data,
+                data: data.rows,
+                pages: Math.ceil(data.count / limit),
                 message: 'Successfully',
                 code: 1
             })
@@ -52,7 +59,7 @@ const uploadImage = (req) => {
         try {
             const error = joi.object({ id }).validate(req.body);
             if (error.error) {
-                if(req.file){
+                if (req.file) {
                     await cloudinary.uploader.destroy(req?.file?.filename)
                 }
                 resolve({
@@ -65,7 +72,7 @@ const uploadImage = (req) => {
                 })
                 console.log(banner);
                 if (!banner) {
-                    if(req.file){
+                    if (req.file) {
                         await cloudinary.uploader.destroy(req?.file?.filename)
                     }
                     resolve({
@@ -91,7 +98,7 @@ const uploadImage = (req) => {
             }
 
         } catch (error) {
-            if(req.file){
+            if (req.file) {
                 await cloudinary.uploader.destroy(req?.file?.filename)
             }
             reject(error)
@@ -202,11 +209,36 @@ const updateBanner = (req) => {
         }
     })
 }
+const getSearch = (req) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let search = "";
+            if (req.query.q) {
+                search = req.query.q
+            }
+            let data = await db.Banner.findAll({
+                where: {
+                    [Op.or]: [
+                        { title: { [Op.like]: `%${search}%` } },
+                    ]
+                }
+            })
+            resolve({
+                data,
+                code: 1,
+                message: 'Successfully'
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
 module.exports = {
     getBanner,
     getAllBanner,
     createBanner,
     deleteBanner,
     updateBanner,
-    uploadImage
+    uploadImage,
+    getSearch
 }

@@ -73,6 +73,14 @@ const delDeliver = async (req, res) => {
         console.log(error);
     }
 }
+const getSearch = async (req, res) => {
+    try {
+        let data=await vendorService.getSearch(req);
+        res.status(200).json(data)
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 module.exports ={
     getVendor,
@@ -84,4 +92,5 @@ module.exports ={
     addDeliver,
     delDeliver,
     getDeliver,
+    getSearch
 }
