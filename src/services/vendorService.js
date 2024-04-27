@@ -448,9 +448,13 @@ const getSearch = (req) => {
                     [Op.or]: [
                         { name: { [Op.like]: `%${search}%` } },
                         { username: { [Op.like]: `%${search}%` } },
-
                     ]
-                }
+                },
+                include: [
+                    {
+                        model: db.Bill, as: 'bill', attributes: ['totalPrice']
+                    }
+                ]
             })
             resolve({
                 data,

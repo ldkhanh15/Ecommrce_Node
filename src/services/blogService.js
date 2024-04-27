@@ -479,13 +479,37 @@ const getSearch = (req) => {
             if (req.query.q) {
                 search = req.query.q
             }
-            let data = await db.Blog.findAll({
-                where: {
-                    [Op.or]: [
-                        { name: { [Op.like]: `%${search}%` } },
+            let data;
+            if (req.user.role === 'R2') {
+                data = await db.Blog.findAll({
+                    where: {
+                        [Op.or]: [
+                            { name: { [Op.like]: `%${search}%` } },
+                            { field: { [Op.like]: `%${search}%` } },
+                        ],
+                        idAuthor: req.user.id
+                    },
+                    include: [
+                        {
+                            model: db.User, as: 'author', attributes: ['name']
+                        }
                     ]
-                }
-            })
+                })
+            } else if (req.user.role === 'R1') {
+                data = await db.Blog.findAll({
+                    where: {
+                        [Op.or]: [
+                            { name: { [Op.like]: `%${search}%` } },
+                            { field: { [Op.like]: `%${search}%` } },
+                        ]
+                    },
+                    include: [
+                        {
+                            model: db.User, as: 'author', attributes: ['name']
+                        }
+                    ]
+                })
+            }
             resolve({
                 data,
                 code: 1,

@@ -279,7 +279,12 @@ const getSearch = (req) => {
                         { maVoucher: { [Op.like]: `%${search}%` } },
                         { description: { [Op.like]: `%${search}%` } },
                     ]
-                }
+                },
+                include: [
+                    {
+                        model: db.Shop, as: 'shop', attributes: ['name', 'avatar', 'id']
+                    }
+                ]
             })
             resolve({
                 data,

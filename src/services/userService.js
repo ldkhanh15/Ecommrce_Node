@@ -47,7 +47,11 @@ const getUser = (req) => {
         }
     })
 }
+const getAllUser = (req) => {
+    return new Promise(async (resolve, reject) => {
 
+    })
+}
 const getCustomer = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -68,16 +72,15 @@ const getCustomer = (req) => {
                 },
                 limit,
                 offset,
-                include: [
-                    {
-                        model: db.Bill, as: 'bill', attributes: [
-                            [db.sequelize.fn('COUNT', db.sequelize.col('*')), 'totalOrders'],
-                            [db.sequelize.fn('SUM', db.sequelize.literal('CASE WHEN idStatus = 1 THEN 1 ELSE 0 END')), 'successfulOrders'],
-                            [db.sequelize.fn('SUM', db.sequelize.literal('CASE WHEN idStatus = 1 THEN totalPrice ELSE 0 END')), 'totalPrice'],
-                        ]
-                    }
-                ],
-                group:['User.id']
+                include: [{
+                    model: db.Bill,
+                    as: 'bill',
+                    attributes: [
+                        'totalPrice', 'idStatus'
+                    ],
+                    required: false
+                }],
+                group: ['User.id']
             });
             resolve({
                 data: data.rows,
@@ -93,7 +96,7 @@ const getCustomer = (req) => {
 const createUser = (req) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const error = joi.object({ email, password, role, birthday, gender, name, username, phone }).validate(req.body)
+            const error = joi.object({ email, password, role, username }).validate(req.body)
 
             if (error.error) {
                 resolve({
@@ -416,7 +419,14 @@ const getSearch = (req) => {
                         { username: { [Op.like]: `%${search}%` } },
 
                     ]
-                }
+                },
+                include: [
+                    {
+                        model: db.Bill, as: 'bill', attributes: [
+                            'totalPrice', 'idStatus'
+                        ],
+                    }
+                ],
             })
             resolve({
                 data,

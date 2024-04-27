@@ -774,7 +774,15 @@ const getSearch = (req) => {
                     [Op.or]: [
                         { name: { [Op.like]: `%${search}%` } },
                     ]
-                }
+                },
+                include: [
+                    {
+                        model: db.ProductDetail, as: 'detailProduct', attributes: ['quantity'],
+                    },
+                    {
+                        model: db.Shop, as: 'shop', attributes: ['name']
+                    }
+                ]
             })
             resolve({
                 data,

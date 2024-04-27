@@ -7,9 +7,9 @@ import authController from '../controller/authController'
 
 //PRIVATE ROUTES
 router.use(authController.verifyToken)
+router.use(authController.isBuyer)
 router.get('/', userController.getUser)
 
-router.use(authController.isBuyer)
 router.put('/update', userController.updateUser)
 
 router.get('/address', userController.getAddress)
